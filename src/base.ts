@@ -66,6 +66,27 @@ export type { TypeOf as infer };
  *
  * If require developper might wish to check if the type instance support null values
  *
+ * ```ts
+ * // Creating type using Built Type class
+ * import { BuiltType, SetConstraint } from '@azlabsjs/built-type';
+ *
+ * const set = BuiltType._set((new SetConstraint).nonempty());
+ *
+ * // Check if the type supports null values
+ * if (set.isNullable()) {
+ *    // built type supports null values
+ * }
+ *
+ * // Check if the type support undefined
+ * if (set.isOptional()) {
+ *    // built type supports null values
+ * }
+ *
+ * // To describe the type
+ * set.describe('my-set');
+ *
+ * ```
+ *
  */
 export class _Type<TOutput = any, Def extends TypeDef = TypeDef, TInput = any> {
   readonly _type!: TOutput;
