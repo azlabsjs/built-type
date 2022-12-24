@@ -20,7 +20,7 @@ import {
   StrConstraint,
   SymbolConstraint,
 } from './type-constraints';
-import { PartrialTypeDef } from './types';
+import { ConstraintInterface, PartrialTypeDef, TypeDef } from './types';
 
 /**
  * BuiltType class provides developpers with factory methods for creating
@@ -46,14 +46,15 @@ export class BuiltType {
    * console.log(email.parse('test-value')); // Will normally fail and throws error
    * ```
    */
-  static _str(def?: PartrialTypeDef<StrConstraint>) {
+  static _str(
+    def?: PartrialTypeDef<StrConstraint>
+  ): _Type<string, TypeDef<ConstraintInterface>, unknown> {
     return createType<string>(
       mergeTypeDefRequiredParams(
         new StrConstraint(),
         def,
         def?.coerce ? (_value) => String(_value) : undefined
-      ),
-      (_value: any) => _value as string
+      )
     );
   }
 
@@ -73,14 +74,15 @@ export class BuiltType {
    *
    * ```
    */
-  static _num(def?: PartrialTypeDef<NumberConstraint>) {
+  static _num(
+    def?: PartrialTypeDef<NumberConstraint>
+  ): _Type<number, TypeDef<ConstraintInterface>, unknown> {
     return createType<number>(
       mergeTypeDefRequiredParams(
         new NumberConstraint(),
         def,
         def?.coerce ? (_value) => Number(_value) : undefined
-      ),
-      (_value: any) => _value as number
+      )
     );
   }
 
@@ -101,14 +103,15 @@ export class BuiltType {
    * ```
    *
    */
-  static _bool(def?: PartrialTypeDef<BoolConstraint>) {
+  static _bool(
+    def?: PartrialTypeDef<BoolConstraint>
+  ): _Type<boolean, TypeDef<ConstraintInterface>, unknown> {
     return createType<boolean>(
       mergeTypeDefRequiredParams(
         new BoolConstraint(),
         def,
         def?.coerce ? (_value) => Boolean(_value) : undefined
-      ),
-      (_value: any) => _value as boolean
+      )
     );
   }
 
@@ -129,14 +132,15 @@ export class BuiltType {
    * ```
    *
    */
-  static _symbol(def?: PartrialTypeDef<SymbolConstraint>) {
+  static _symbol(
+    def?: PartrialTypeDef<SymbolConstraint>
+  ): _Type<symbol, TypeDef<ConstraintInterface>, unknown> {
     return createType<symbol>(
       mergeTypeDefRequiredParams(
         new SymbolConstraint(),
         def,
         def?.coerce ? (_value) => Symbol(_value) : undefined
-      ),
-      (_value) => _value as symbol
+      )
     );
   }
 
@@ -157,7 +161,9 @@ export class BuiltType {
    * ```
    *
    */
-  static _date(def?: PartrialTypeDef<DateContraint>) {
+  static _date(
+    def?: PartrialTypeDef<DateContraint>
+  ): _Type<Date, TypeDef<ConstraintInterface>, unknown> {
     return createType<Date>(
       mergeTypeDefRequiredParams(
         new DateContraint(),
@@ -165,8 +171,7 @@ export class BuiltType {
         def?.coerce
           ? (_value) => (!(_value instanceof Date) ? new Date(_value) : _value)
           : undefined
-      ),
-      (_value: any) => _value as Date
+      )
     );
   }
 
@@ -187,7 +192,10 @@ export class BuiltType {
    * ```
    *
    */
-  static _array<T>(type_: _Type<T>, def?: PartrialTypeDef<ArrayConstraint>) {
+  static _array<T>(
+    type_: _Type<T>,
+    def?: PartrialTypeDef<ArrayConstraint>
+  ): _Type<T[], TypeDef<ConstraintInterface>, unknown[]> {
     return createType<T[]>(
       mergeTypeDefRequiredParams(new ArrayConstraint(), def),
       createParseArray(type_)
@@ -244,10 +252,14 @@ export class BuiltType {
   static _map<TKey, TValue>(
     tKey: _Type<TKey>,
     tValue: _Type<TValue>,
-    def?: Omit<PartrialTypeDef<MapConstraint>, 'coerce'>
-  ) {
+    def?: PartrialTypeDef<MapConstraint>
+  ): _Type<Map<TKey, TValue>, TypeDef<ConstraintInterface>, Iterable<unknown>> {
     return createType<Map<TKey, TValue>>(
-      mergeTypeDefRequiredParams(new MapConstraint(), def),
+      mergeTypeDefRequiredParams(
+        new MapConstraint(),
+        def,
+        def?.coerce ? (_value) => new Map(_value) : undefined
+      ),
       createParseMap(tKey, tValue)
     );
   }
@@ -271,10 +283,18 @@ export class BuiltType {
    */
   static _set<TValue>(
     tValue: _Type<TValue>,
-    def?: Omit<PartrialTypeDef<SetConstraint>, 'coerce'>
-  ) {
+    def?: PartrialTypeDef<SetConstraint>
+  ): _Type<Set<TValue>, TypeDef<ConstraintInterface>, Iterable<unknown>> {
     return createType<Set<TValue>>(
-      mergeTypeDefRequiredParams(new SetConstraint(), def),
+      mergeTypeDefRequiredParams(
+        new SetConstraint(),
+        def,
+        def?.coerce
+          ? (_value) => {
+              return new Set(_value);
+            }
+          : undefined
+      ),
       createParseSet(tValue)
     );
   }

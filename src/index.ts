@@ -1,4 +1,5 @@
 export { TypeOf, createType, infer } from './base';
+export { BuiltType } from './built-type';
 export { Patterns } from './patterns';
 export {
     ArrayConstraint,
