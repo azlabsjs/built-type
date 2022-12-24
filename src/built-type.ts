@@ -124,15 +124,15 @@ export class BuiltType {
     def?: Omit<PartrialTypeDef, 'coerce'>
   ) {
     return new Type<{
-      [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
+      [Property in keyof typeof dict]: infer<typeof dict[Property]>;
     }>(
       mergeTypeDefRequiredParams(new ObjectConstraint(), def),
       createParseObject<{
-        [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
+        [Property in keyof typeof dict]: infer<typeof dict[Property]>;
       }>(
         createPropMapFunc(dict, propMap),
         new Object() as {
-          [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
+          [Property in keyof typeof dict]: infer<typeof dict[Property]>;
         }
       )
     );
