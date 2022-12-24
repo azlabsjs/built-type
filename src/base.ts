@@ -1,5 +1,6 @@
 import { ParseError } from './errors';
-import { SafeParseReturnType, TypeDef } from './types';
+import { TypeParseResult } from './parse-types';
+import { PartrialTypeDef, SafeParseReturnType, TypeDef } from './types';
 
 /**
  * @internal
@@ -66,24 +67,71 @@ export type { TypeOf as infer };
  *
  * If require developper might wish to check if the type instance support null values
  *
+ * ```ts
+ * // Creating type using Built Type class
+ * import { BuiltType, SetConstraint } from '@azlabsjs/built-type';
+ *
+ * const set = BuiltType._set((new SetConstraint).nonempty());
+ *
+ * // Check if the type supports null values
+ * if (set.isNullable()) {
+ *    // built type supports null values
+ * }
+ *
+ * // Check if the type support undefined
+ * if (set.isOptional()) {
+ *    // built type supports null values
+ * }
+ *
+ * // To describe the type
+ * set.describe('my-set');
+ *
+ * ```
+ *
  */
-export class _Type<TOutput = any, Def extends TypeDef = TypeDef, TInput = any> {
+export class _Type<
+  TOutput = any,
+  Def extends TypeDef = TypeDef,
+  TInput = unknown
+> {
   readonly _type!: TOutput;
   readonly _output!: TOutput;
   readonly _def!: Def;
-  readonly _parseFn!: (value: any) => TOutput;
+  readonly _parseFn!: (value: any) => TypeParseResult<TOutput>;
 
   get description() {
     return this._def.description;
   }
 
-  constructor(def: Def, _parseFn?: (value: any) => TOutput) {
+  constructor(def: Def, _parseFn?: (value: any) => TypeParseResult<TOutput>) {
     if (def) {
       this._def = def;
     }
-    this._parseFn = _parseFn ?? ((value: any) => value as TOutput);
+    this._parseFn =
+      _parseFn ??
+      ((value: any) => new TypeParseResult(value as TOutput, false));
   }
 
+  /**
+   * Copy the current object updating type definition and the parse function.
+   */
+  copy(def: PartrialTypeDef, _parseFn?: (value: any) => TypeParseResult<TOutput>) {
+    const self  = (this as any).constructor;
+    return self({...this._def, ...def }, _parseFn ?? this._parseFn);
+  }
+
+  /**
+   * Parse user provided value using the built-type. 
+   * It throws a `ParseError` error instance if the parsing fails.
+   * 
+   * ```ts
+   * const type = new BuiltType._object({ ... })
+   * 
+   * // parsing a value using the type built type
+   * const result = type.parse({ ... }); // throws `ParseError`
+   * 
+   * ```
+   */
   parse(value: TInput) {
     const result = this.safeParse(value);
     if (!result.success) {
@@ -97,26 +145,67 @@ export class _Type<TOutput = any, Def extends TypeDef = TypeDef, TInput = any> {
     return result.data as TOutput;
   }
 
-  safeParse(value: any): SafeParseReturnType<TOutput> {
+  /**
+   * Parse user provided value using the built-type.
+   * 
+   * ```ts
+   * const type = new BuiltType._object({ ... })
+   * 
+   * // parsing a value using the type built type
+   * const result = type.safeParse({ ... }); // `SafeParseReturnType`
+   * 
+   * if (result.success) {
+   *  // TODO: interact with the parse result 
+   *  console.log(result.data);
+   * }
+   * ```
+   */
+  safeParse(value: TInput): SafeParseReturnType<TOutput> {
     if (this._def.coerce) {
       value = this._def.coerce(value);
     }
     const constraint = this._def.constraint.apply(value);
-    return {
-      data: !constraint.fails() ? this._parseFn(value) : undefined,
-      errors: constraint.errors,
-      success: !constraint.fails(),
-    };
+    const result = !constraint.fails()
+      ? this._parseFn(value)
+      : new TypeParseResult(undefined, true, constraint.errors, false);
+    return result.fails
+      ? {
+          success: false,
+          errors: result.errors,
+        }
+      : {
+          success: true,
+          errors: undefined,
+          data: result.data,
+        };
   }
 
+  rawParse(value: TInput) {
+    if (this._def.coerce) {
+      value = this._def.coerce(value);
+    }
+    return (this._parseFn)(value);
+  }
+
+  /**
+   * `isOptional` returns boolean value indicating whether the
+   * type support optional values
+   */
   isOptional(): boolean {
-    return this.safeParse(undefined).success;
+    return this.safeParse(undefined as any).success;
   }
 
+  /**
+   * `isOptional` returns boolean value indicating whether the
+   * type support null values
+   */
   isNullable(): boolean {
-    return this.safeParse(null).success;
+    return this.safeParse(null as any).success;
   }
 
+  /**
+   * Describe the built-type
+   */
   describe(description: string) {
     const self = (this as any).constructor as new (...args: any) => _Type;
     return new self({
@@ -132,5 +221,5 @@ export const createType = <
   TInput = any
 >(
   def: Def,
-  _parseFn?: (value: any) => TOutput
+  _parseFn?: (value: any) => TypeParseResult<TOutput>
 ) => new _Type<TOutput, Def, TInput>(def, _parseFn);
