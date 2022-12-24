@@ -1,4 +1,4 @@
-export { Type, infer } from './base';
+export { TypeOf, createType, infer } from './base';
 export { Patterns } from './patterns';
 export {
     ArrayConstraint,
@@ -15,6 +15,4 @@ export {
     SymbolConstraint
 } from './type-constraints';
 export { ConstraintInterface } from './types';
-
-
 

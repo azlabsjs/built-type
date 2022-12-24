@@ -1,4 +1,4 @@
-import { Type } from './base';
+import { _Type } from './base';
 import { createPropMapFunc } from './helpers';
 
 /**
@@ -6,7 +6,7 @@ import { createPropMapFunc } from './helpers';
  *
  * Creates a function that parses javascript array
  */
-export function createParseArray<T>(t: Type<T>) {
+export function createParseArray<T>(t: _Type<T>) {
   // TODO: Handle async parsing
   return (value: unknown[]) => value.map((item: unknown) => t.parse(item));
 }
@@ -39,8 +39,8 @@ export function createParseObject<T>(
  * Creates a function that parses a javascript map
  */
 export function createParseMap<TKey, TValue>(
-  _key: Type<TKey>,
-  _value: Type<TValue>
+  _key: _Type<TKey>,
+  _value: _Type<TValue>
 ) {
   return (value: Map<any, any>) => {
     const instance: Map<TKey, TValue> = new Map();
@@ -57,7 +57,7 @@ export function createParseMap<TKey, TValue>(
  * Creates a function that parses a javascript set to user defined
  * Set type
  */
-export function createParseSet<TValue>(_value: Type<TValue>) {
+export function createParseSet<TValue>(_value: _Type<TValue>) {
   return (value: Set<any>) => {
     const instance: Set<TValue> = new Set();
     for (const item of value) {

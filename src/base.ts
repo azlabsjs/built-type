@@ -4,7 +4,7 @@ import { SafeParseReturnType, TypeDef } from './types';
 /**
  * @internal
  */
-export type TypeAny = Type<any, any, any>;
+export type TypeAny = _Type<any, any, any>;
 
 /**
  * @interna
@@ -17,16 +17,16 @@ export type RawShapeType = { [k: string]: TypeAny };
  *
  * ```ts
  * import {infer, BuiltType} from '@azlabsjs/built-type';
- * 
+ *
  * const person = BuiltType.object({
  *    firstname: BuiltType.str(),
  *    lastname: BuiltType.str()
  * });
- * 
+ *
  * export type Person = infer(person);
  * ```
  */
-export type TypeOf<T extends Type<unknown, any, unknown>> = T['_output'];
+export type TypeOf<T extends _Type<unknown, any, unknown>> = T['_output'];
 
 /**
  * Export the Typeof type operator as `infer`
@@ -35,10 +35,39 @@ export type { TypeOf as infer };
 
 /**
  * @internal
- * 
- * Built type base class the provide type parsing and construction
+ *
+ * Built type base class the provide type parsing and construction.
+ *
+ * It allows developper to transform, construct and parse (safely) typescript values
+ *
+ * ```ts
+ * // Creating type using Built Type class
+ * import { BuiltType, SetConstraint } from '@azlabsjs/built-type';
+ *
+ * const set = BuiltType._set((new SetConstraint).nonempty());
+ *
+ * // To create a result from a set instance:
+ * const result = set.parse(new Set([])); // Will fails and throws a ParseError as it does not conform the constraint
+ * // Applied by the `nonempty()` of the set constraint
+ *
+ * const result2 = set.parse(new Set([1])); // Passes and create a Set<TValue> instance
+ *
+ * // Alternative to the `parse()` method, the type class support a `safeParse()` which allow the developper to take decision based on the state of value parsing
+ *
+ * const result = set.safeParse(new Set()); // return SafeParseReturnType<Set>
+ * // result.success -> returns true if parsing was successful and false if not
+ * if (result.success) {
+ *    const data = result.data;
+ * } else {
+ *  // Interact with the parsing error to see the errors based on the parsing
+ * }
+ *
+ * ```
+ *
+ * If require developper might wish to check if the type instance support null values
+ *
  */
-export class Type<TOutput = any, Def extends TypeDef = TypeDef, TInput = any> {
+export class _Type<TOutput = any, Def extends TypeDef = TypeDef, TInput = any> {
   readonly _type!: TOutput;
   readonly _output!: TOutput;
   readonly _def!: Def;
@@ -89,10 +118,19 @@ export class Type<TOutput = any, Def extends TypeDef = TypeDef, TInput = any> {
   }
 
   describe(description: string) {
-    const self = (this as any).constructor as new (...args: any) => Type;
+    const self = (this as any).constructor as new (...args: any) => _Type;
     return new self({
       ...this._def,
       description,
     });
   }
 }
+
+export const createType = <
+  TOutput = any,
+  Def extends TypeDef = TypeDef,
+  TInput = any
+>(
+  def: Def,
+  _parseFn?: (value: any) => TOutput
+) => new _Type<TOutput, Def, TInput>(def, _parseFn);
