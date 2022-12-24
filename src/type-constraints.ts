@@ -1,12 +1,18 @@
 import { ConstraintInterface } from './types';
 
-export abstract class Constraint implements ConstraintInterface {
+/**
+ * Base class for constraint that are applicable on built types.
+ */
+abstract class Constraint implements ConstraintInterface {
   protected _map: Map<
     string,
     { fn: (value: any) => boolean; message: string }
   > = new Map();
+
   protected _errors: string[] = [];
+
   private _null = false;
+
   private _undefined = false;
 
   get errors() {
@@ -14,36 +20,17 @@ export abstract class Constraint implements ConstraintInterface {
   }
 
   abstract expectType: string | ((value: any) => boolean);
-  /**
-   * Constraint the variable to support null type
-   */
+
   nullable() {
     this._null = true;
     return this;
   }
 
-  /**
-   * Constraint the variable to support null and undefined types
-   */
   nullish() {
     this._undefined = true;
     return this;
   }
 
-  /**
-   * Check if the constraint fails on the variable. Constraints
-   * will be in failure state if any of the validation function fails
-   *
-   * **Usage**
-   *
-   * ```ts
-   * let constraint = (new NumberConstraint).min(10).max(30);
-   *
-   * // Applying the constraint to a given value
-   * constraint.apply(15); // constraint.fails() === false
-   * constraint.apply(45); // constraint.fails() === true
-   * ```
-   */
   fails() {
     return this._errors.length !== 0;
   }
@@ -88,6 +75,22 @@ export abstract class Constraint implements ConstraintInterface {
   }
 }
 
+/**
+ * Defines a string constraint class that can be applied to
+ * built string types
+ * 
+ * ```ts
+ * import { StrConstraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new StrConstraint)
+ *                      .minLength(2)
+ *                      .maxLength(10);
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply('Hello').fails(); // false
+ * constraint.apply('Hello World! Welcome').fails(); // true
+ * ```
+ */
 export class StrConstraint extends Constraint {
   get expectType() {
     return 'string';
@@ -162,8 +165,22 @@ export class StrConstraint extends Constraint {
     return super.apply(value);
   }
 }
-// #endregion Patterns
 
+/**
+ * Defines a number constraint class that can be applied to
+ * built number types
+ * 
+ * ```ts
+ * import { NumberConstraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new NumberConstraint)
+ *                      .min(2);
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply(3).fails(); // false
+ * constraint.apply(1).fails(); // true
+ * ```
+ */
 export class NumberConstraint extends Constraint {
   expectType = 'number';
 
@@ -237,14 +254,46 @@ export class NumberConstraint extends Constraint {
   }
 }
 
+/**
+ * Defines a boolean constraint class that can be applied to
+ * built boolean types
+ * 
+ * 
+ * ```ts
+ * import { BoolConstraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new BoolConstraint);
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply(true).fails(); // false
+ * constraint.apply('Hello').fails(); // true
+ * ```
+ */
 export class BoolConstraint extends Constraint {
   expectType = 'boolean';
 }
 
+/**
+ * Defines a symbol constraint class that can be applied to
+ * built symbol types
+ */
 export class SymbolConstraint extends Constraint {
   expectType = 'symbol';
 }
 
+/**
+ * Defines a date constraint class that can be applied to
+ * built date types
+ * 
+ * ```ts
+ * import { DateContraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new DateContraint).max(new Date());
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply(new Date('2021-11-10')).fails();
+ * ```
+ */
 export class DateContraint extends Constraint {
   // TODO : Add JSDate.isValid()
   expectType = (_value: any) =>
@@ -298,6 +347,25 @@ export class DateContraint extends Constraint {
   }
 }
 
+/**
+ * Defines an array constraint class that can be applied to
+ * built array types
+ * 
+ * ```ts
+ * import { ArrayConstraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new ArrayConstraint).nonempty();
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply([]).fails(); // true
+ * 
+ * const constraint2 = (new ArrayConstraint).min(2);
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply([2]).fails(); // true
+ * constraint.apply([2, 4, 5]).fails(); // false
+ * ```
+ */
 export class ArrayConstraint extends Constraint {
   expectType = (_value: any) => Array.isArray(_value);
 
@@ -338,6 +406,10 @@ export class ArrayConstraint extends Constraint {
   }
 }
 
+/**
+ * Defines an object constraint class that can be applied to
+ * built object types
+ */
 export class ObjectConstraint extends Constraint {
   expectType = (value: any) => {
     if (typeof value !== 'object') {
@@ -379,19 +451,56 @@ export class ObjectConstraint extends Constraint {
   // }
 }
 
+/**
+ * Defines a constraint that might be apply to any or unkown
+ * built types
+ */
 export class NoConstraint extends Constraint {
   expectType = () => true;
 }
 
+/**
+ * Defines a null and undefined constraint class that can be applied to
+ * built null and undefined types
+ * 
+ * ```ts
+ * import { NullishConstraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new NullishConstraint);
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply(null).fails(); // false
+ * constraint.apply(undefined).fails(); // false
+ * constraint.apply(34).fails(); // true
+ * ```
+ */
 export class NullishConstraint extends Constraint {
   expectType = (_value: any) =>
     typeof _value === 'undefined' || _value === null;
 }
 
+/**
+ * Defines a null constraint class that can be applied to
+ * built null types
+ * 
+ * ```ts
+ * import { NullConstraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new NullConstraint);
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply(null).fails(); // false
+ * constraint.apply(34).fails(); // true
+ * ```
+ */
 export class NullConstraint extends Constraint {
   expectType = (value: any) => value === null;
 }
 
+/**
+ * Defines a map instance constraint class that can be applied to
+ * built map types
+ */
 export class MapConstraint extends Constraint {
   expectType = (value: any) => {
     if (value instanceof Map) {
@@ -411,6 +520,25 @@ export class MapConstraint extends Constraint {
   };
 }
 
+/**
+ * Defines a set instance constraint class that can be applied to
+ * built set types
+ * 
+ * ```ts
+ * import { SetConstraint } from '@azlabsjs/built-type';
+ * 
+ * const constraint = (new SetConstraint).nonempty();
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply(new Set()).fails(); // true
+ * 
+ * const constraint2 = (new ArrayConstraint).min(2);
+ * 
+ * // Invoke the constraint on a value
+ * constraint.apply(new Set([2])).fails(); // true
+ * constraint.apply(new Set([2, 4, 5])).fails(); // false
+ * ```
+ */
 export class SetConstraint extends Constraint {
   expectType = (value: any) => {
     if (value instanceof Set) {

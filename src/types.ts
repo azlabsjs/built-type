@@ -3,9 +3,16 @@
  * to insure that runtime code execute safely
  */
 export interface ConstraintInterface {
+  /**
+   * Constraint validation errrors
+   */
   errors: unknown;
 
+  /**
+   * Constraint expected type
+   */
   expectType: string | ((value: any) => boolean);
+
   /**
    * Constraint the variable to support null type
    */
@@ -38,12 +45,21 @@ export interface ConstraintInterface {
   apply(value: any): ConstraintInterface;
 }
 
+/**
+ * @type
+ * 
+ * Built type definition
+ */
 export type TypeDef<TContraint extends ConstraintInterface = ConstraintInterface> = {
   description?: string;
   coerce?: (value: any) => any;
   constraint: TContraint;
 };
 
+/**
+ * @type
+ * Partial built type definition
+ */
 export type PartrialTypeDef<TContraint extends ConstraintInterface = ConstraintInterface> = {
   description?: string;
   coerce?: boolean;
@@ -52,6 +68,7 @@ export type PartrialTypeDef<TContraint extends ConstraintInterface = ConstraintI
 
 
 /**
+ * @type
  * Return type of the type safe parse method
  */
 export type SafeParseReturnType<T> = {

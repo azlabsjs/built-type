@@ -3,35 +3,12 @@ import { createPropMapFunc } from './helpers';
 
 /**
  * @internal
- */
-export const parseNumber = (value: any) => value as number;
-/**
- * @internal
- */
-export const parseString = (value: any) => value as string;
-/**
- * @internal
- */
-export const parseDate = (value: any) => value as Date;
-/**
- * @internal
- */
-export const parseBool = (value: any) => value as boolean;
-/**
- * @internal
- */
-export const parseSymbol = (value: any) => value as symbol;
-
-/**
- * @internal
  *
  * Creates a function that parses javascript array
  */
-export function parseArray<T>(t: Type<T>) {
+export function createParseArray<T>(t: Type<T>) {
   // TODO: Handle async parsing
-  return (value: any[]) => {
-    return value.map((item: any) => t.parse(item));
-  };
+  return (value: unknown[]) => value.map((item: unknown) => t.parse(item));
 }
 
 /**

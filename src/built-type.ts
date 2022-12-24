@@ -1,20 +1,12 @@
-import { RawShapeType, Type, TypeOf } from './base';
+import { RawShapeType, Type } from './base';
 import { createPropMapFunc, mergeTypeDefRequiredParams } from './helpers';
 import {
   createParseMap,
   createParseObject,
   createParseSet,
-  parseArray,
-  parseBool,
-  parseDate,
-  parseNumber,
-  parseString,
-  parseSymbol,
 } from './parse-types';
 import {
-  ArrayConstraint,
   BoolConstraint,
-  DateContraint,
   MapConstraint,
   NoConstraint,
   NullConstraint,
@@ -29,51 +21,51 @@ import { PartrialTypeDef } from './types';
 
 export class BuiltType {
 
-  static str(def?: PartrialTypeDef<StrConstraint>) {
+  static _string(def?: PartrialTypeDef<StrConstraint>) {
     return new Type<string>(
       mergeTypeDefRequiredParams(
         new StrConstraint(),
         def,
         def?.coerce ? (_value) => String(_value) : undefined
       ),
-      parseString
+      (_value: any) => _value as string
     );
   }
 
-  static num(def?: PartrialTypeDef<NumberConstraint>) {
+  static _number(def?: PartrialTypeDef<NumberConstraint>) {
     return new Type<number>(
       mergeTypeDefRequiredParams(
         new NumberConstraint(),
         def,
         def?.coerce ? (_value) => Number(_value) : undefined
       ),
-      parseNumber
+      (_value: any) => _value as number
     );
   }
 
-  static bool(def?: PartrialTypeDef<BoolConstraint>) {
+  static _bool(def?: PartrialTypeDef<BoolConstraint>) {
     return new Type<boolean>(
       mergeTypeDefRequiredParams(
         new BoolConstraint(),
         def,
         def?.coerce ? (_value) => Boolean(_value) : undefined
       ),
-      parseBool
+      (_value: any) => _value as boolean
     );
   }
 
-  static symbolType(def?: PartrialTypeDef): Type<symbol> {
+  static _symbol(def?: PartrialTypeDef): Type<symbol> {
     return new Type<symbol>(
       mergeTypeDefRequiredParams(
         new SymbolConstraint(),
         def,
         def?.coerce ? (_value) => Symbol(_value) : undefined
       ),
-      parseSymbol
+      (_value) => _value as symbol
     );
   }
 
-  static date(def?: PartrialTypeDef<DateContraint>) {
+  static _date(def?: PartrialTypeDef<DateContraint>) {
     return new Type<Date>(
       mergeTypeDefRequiredParams(
         new DateContraint(),
@@ -86,22 +78,22 @@ export class BuiltType {
     );
   }
 
-  static array<T>(type_: Type<T>, def?: PartrialTypeDef<ArrayConstraint>) {
+  static _array<T>(type_: Type<T>, def?: PartrialTypeDef<ArrayConstraint>) {
     return new Type<T[]>(
       mergeTypeDefRequiredParams(new ArrayConstraint(), def),
       parseArray(type_)
     );
   }
 
-  static nil() {
-    return new Type<undefined>({ constraint: new NullConstraint() });
+  static _null() {
+    return new Type<null>({ constraint: new NullConstraint() });
   }
 
-  static nullish() {
+  static _undefined() {
     return new Type<undefined>({ constraint: new NullishConstraint() });
   }
 
-  static map<TKey, TValue>(
+  static _map<TKey, TValue>(
     tKey: Type<TKey>,
     tValue: Type<TValue>,
     def?: Omit<PartrialTypeDef<MapConstraint>, 'coerce'>
@@ -112,7 +104,7 @@ export class BuiltType {
     );
   }
 
-  static set<TValue>(
+  static _set<TValue>(
     tValue: Type<TValue>,
     def?: Omit<PartrialTypeDef<MapConstraint>, 'coerce'>
   ) {
@@ -122,15 +114,11 @@ export class BuiltType {
     );
   }
 
-  static any() {
+  static mixed() {
     return new Type<any>({ constraint: new NoConstraint() });
   }
 
-  static unknown() {
-    return new Type<unknown>({ constraint: new NoConstraint() });
-  }
-
-  static object<T extends RawShapeType>(
+  static _object<T extends RawShapeType>(
     dict: T,
     propMap?: Partial<{ [k in keyof T]: string }>,
     def?: Omit<PartrialTypeDef, 'coerce'>
