@@ -3,7 +3,7 @@ import {
   NumberConstraint,
   Patterns,
   SetConstraint,
-  StrConstraint,
+  StrConstraint
 } from '../src';
 
 describe('BuiltType', () => {
@@ -67,12 +67,33 @@ describe('BuiltType', () => {
 
     let result = set.safeParse([1, 3, 4]);
     expect(result.success).toEqual(true);
-    expect(Array.from(result.data?.values() ?? [])).toEqual(
-      [1, 3, 4]
-    );
+    expect(Array.from(result.data?.values() ?? [])).toEqual([1, 3, 4]);
     const builtSet = BuiltType._set(BuiltType._str(), {
       constraint: new SetConstraint().nonempty(),
     });
     expect(builtSet.safeParse([]).success).toBe(false);
+  });
+
+  it('', () => {
+    const person = BuiltType._object(
+      {
+        firstname: BuiltType._str({ coerce: true }),
+        lastname: BuiltType._str({ coerce: true }),
+        email: BuiltType._str(),
+      },
+      { email: 'address.email' }
+    );
+
+    const result = person.safeParse({
+      firstname: 'John',
+      lastname: 'Doe',
+      address: {
+        email: 'johndoe@example.com'
+      }
+    });
+
+    expect(result.success).toEqual(true);
+    expect(result.data?.email).toEqual('johndoe@example.com');
+    expect(result.data?.firstname).toEqual('John');
   });
 });

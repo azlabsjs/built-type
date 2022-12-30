@@ -1,3 +1,4 @@
+import { getObjectProperty } from '@azlabsjs/js-object';
 import { _Type } from './base';
 import { createPropMapFunc } from './helpers';
 
@@ -89,10 +90,8 @@ export function createParseObject<T>(
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     for (const prop of propMap) {
-      if (!(prop.inputKey in value)) {
-        continue;
-      }
-      const result = prop._type.safeParse(value[prop.inputKey]);
+      const _value = getObjectProperty(value, prop.inputKey);
+      const result = prop._type.safeParse(_value);
       if (result.success && result.data) {
         _instance[prop.outputKey] = result.data;
       } else {
