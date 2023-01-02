@@ -1,10 +1,10 @@
-import { RawShapeType, TypeOf, _Type, createType } from './base';
+import { createType, RawShapeType, TypeOf, _Type } from './base';
 import { createPropMapFunc, mergeTypeDefRequiredParams } from './helpers';
 import {
   createParseArray,
   createParseMap,
   createParseObject,
-  createParseSet,
+  createParseSet
 } from './parse-types';
 import {
   ArrayConstraint,
@@ -18,7 +18,7 @@ import {
   ObjectConstraint,
   SetConstraint,
   StrConstraint,
-  SymbolConstraint,
+  SymbolConstraint
 } from './type-constraints';
 import { ConstraintInterface, PartrialTypeDef, TypeDef } from './types';
 
@@ -374,10 +374,7 @@ export class BuiltType {
       createParseObject<{
         [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
       }>(
-        createPropMapFunc(dict, propMap),
-        new Object() as {
-          [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
-        }
+        createPropMapFunc(dict, propMap)
       )
     );
   }

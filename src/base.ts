@@ -104,9 +104,7 @@ export class _Type<
   }
 
   constructor(def: Def, _parseFn?: (value: any) => TypeParseResult<TOutput>) {
-    if (def) {
-      this._def = def;
-    }
+    this._def = def;
     this._parseFn =
       _parseFn ??
       ((value: any) => new TypeParseResult(value as TOutput, false));
@@ -201,6 +199,16 @@ export class _Type<
    */
   isNullable(): boolean {
     return this.safeParse(null as any).success;
+  }
+
+  nullable() {
+    this._def.constraint?.nullable();
+    return this;
+  }
+
+  nullish() {
+    this._def.constraint?.nullish();
+    return this;
   }
 
   /**

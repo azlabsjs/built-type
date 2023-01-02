@@ -56,7 +56,7 @@ export function createParseArray<T>(t: _Type<T>) {
     let index = 0;
     items.forEach((item: any) => {
       const result = t.safeParse(item);
-      if (result.success && result.data) {
+      if (result.success) {
         output.push(result.data as T);
       } else {
         hasErrors = true;
@@ -78,22 +78,21 @@ export function createParseArray<T>(t: _Type<T>) {
  *
  * Creates a function that parses a complex user defined object
  */
-export function createParseObject<T>(
+export function createParseObject<T extends Record<string, unknown>>(
   createProp: ReturnType<typeof createPropMapFunc>,
-  instance: T,
   root = 'root$'
 ) {
   return (value: any) => {
     // TODO: Handle async parsing
     const propMap = createProp();
-    const _instance = instance as any;
+    const _instance: T = new Object() as T;
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     for (const prop of propMap) {
       const _value = getObjectProperty(value, prop.inputKey);
       const result = prop._type.safeParse(_value);
-      if (result.success && result.data) {
-        _instance[prop.outputKey] = result.data;
+      if (result.success) {
+        _instance[prop.outputKey as keyof T] = result.data;
       } else {
         hasErrors = true;
         _errors[`${root}.${prop.inputKey}`] = result.errors;
@@ -154,8 +153,8 @@ export function createParseSet<TValue>(t: _Type<TValue>) {
     let index = 0;
     items.forEach((item: any) => {
       const result = t.safeParse(item);
-      if (result.success && result.data) {
-        _instance.add(result.data);
+      if (result.success) {
+        _instance.add(result.data as TValue);
       } else {
         hasErrors = true;
         _errors[`*.${index}`] = result.errors;
