@@ -53,7 +53,12 @@ export class BuiltType {
       mergeTypeDefRequiredParams(
         new StrConstraint(),
         def,
-        def?.coerce ? (_value) => String(_value) : undefined
+        def?.coerce
+          ? (_value) =>
+              typeof _value !== 'undefined' && _value !== null
+                ? String(_value)
+                : _value
+          : undefined
       )
     );
   }
@@ -81,7 +86,12 @@ export class BuiltType {
       mergeTypeDefRequiredParams(
         new NumberConstraint(),
         def,
-        def?.coerce ? (_value) => Number(_value) : undefined
+        def?.coerce
+          ? (_value) =>
+              typeof _value !== 'undefined' && _value !== null
+                ? Number(_value)
+                : _value
+          : undefined
       )
     );
   }
@@ -110,7 +120,12 @@ export class BuiltType {
       mergeTypeDefRequiredParams(
         new BoolConstraint(),
         def,
-        def?.coerce ? (_value) => Boolean(_value) : undefined
+        def?.coerce
+          ? (_value) =>
+              typeof _value !== 'undefined' && _value !== null
+                ? Boolean(_value)
+                : _value
+          : undefined
       )
     );
   }
@@ -139,7 +154,12 @@ export class BuiltType {
       mergeTypeDefRequiredParams(
         new SymbolConstraint(),
         def,
-        def?.coerce ? (_value) => Symbol(_value) : undefined
+        def?.coerce
+          ? (_value) =>
+              typeof _value !== 'undefined' && _value !== null
+                ? Symbol(_value)
+                : _value
+          : undefined
       )
     );
   }
@@ -169,7 +189,12 @@ export class BuiltType {
         new DateContraint(),
         def,
         def?.coerce
-          ? (_value) => (!(_value instanceof Date) ? new Date(_value) : _value)
+          ? (_value) =>
+              typeof _value !== 'undefined' && _value !== null
+                ? !(_value instanceof Date)
+                  ? new Date(_value)
+                  : _value
+                : _value
           : undefined
       )
     );
@@ -258,7 +283,12 @@ export class BuiltType {
       mergeTypeDefRequiredParams(
         new MapConstraint(),
         def,
-        def?.coerce ? (_value) => new Map(_value) : undefined
+        def?.coerce
+          ? (_value) =>
+              typeof _value !== 'undefined' && _value !== null
+                ? new Map(_value)
+                : _value
+          : undefined
       ),
       createParseMap(tKey, tValue)
     );
@@ -290,9 +320,10 @@ export class BuiltType {
         new SetConstraint(),
         def,
         def?.coerce
-          ? (_value) => {
-              return new Set(_value);
-            }
+          ? (_value) =>
+              typeof _value !== 'undefined' && _value !== null
+                ? new Set(_value)
+                : _value
           : undefined
       ),
       createParseSet(tValue)
@@ -373,9 +404,7 @@ export class BuiltType {
       mergeTypeDefRequiredParams(new ObjectConstraint(), def),
       createParseObject<{
         [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
-      }>(
-        createPropMapFunc(dict, propMap)
-      )
+      }>(createPropMapFunc(dict, propMap))
     );
   }
 }
