@@ -54,16 +54,19 @@ export function createParseArray<T>(t: _Type<T>) {
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     let index = 0;
-    items.forEach((item: any) => {
-      const result = t.safeParse(item);
-      if (result.success) {
-        output.push(result.data as T);
-      } else {
-        hasErrors = true;
-        _errors[`*.${index}`] = result.errors;
-      }
-      index += 1;
-    });
+    // Check if the variable is defined and if it an array before proceeding
+    if (items && Array.isArray(items)) {
+      items.forEach((item: any) => {
+        const result = t.safeParse(item);
+        if (result.success) {
+          output.push(result.data as T);
+        } else {
+          hasErrors = true;
+          _errors[`*.${index}`] = result.errors;
+        }
+        index += 1;
+      });
+    }
     return new TypeParseResult(
       output,
       hasErrors,
@@ -120,16 +123,20 @@ export function createParseMap<TKey, TValue>(
     const _instance: Map<TKey, TValue> = new Map();
     const _errors = new Map<any, unknown>();
     let hasErrors = false;
-    items.forEach((item, k) => {
-      const __key = _key.safeParse(k);
-      const __value = _value.safeParse(item);
-      if (__key.success && __key.data && __value.success && __value.data) {
-        _instance.set(__key.data, __value.data);
-      } else {
-        hasErrors = true;
-        _errors.set(k, [__key.errors, __value.errors]);
-      }
-    });
+    // We first check if items variable is define before
+    // setting map values
+    if (items) {
+      items.forEach((item, k) => {
+        const __key = _key.safeParse(k);
+        const __value = _value.safeParse(item);
+        if (__key.success && __key.data && __value.success && __value.data) {
+          _instance.set(__key.data, __value.data);
+        } else {
+          hasErrors = true;
+          _errors.set(k, [__key.errors, __value.errors]);
+        }
+      });
+    }
     return new TypeParseResult(
       _instance,
       hasErrors,
@@ -151,16 +158,19 @@ export function createParseSet<TValue>(t: _Type<TValue>) {
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     let index = 0;
-    items.forEach((item: any) => {
-      const result = t.safeParse(item);
-      if (result.success) {
-        _instance.add(result.data as TValue);
-      } else {
-        hasErrors = true;
-        _errors[`*.${index}`] = result.errors;
-      }
-      index += 1;
-    });
+    // Checks if the input set is defines before proceeding
+    if (items) {
+      items.forEach((item: any) => {
+        const result = t.safeParse(item);
+        if (result.success) {
+          _instance.add(result.data as TValue);
+        } else {
+          hasErrors = true;
+          _errors[`*.${index}`] = result.errors;
+        }
+        index += 1;
+      });
+    }
     return new TypeParseResult(
       _instance,
       hasErrors,
