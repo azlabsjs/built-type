@@ -1,72 +1,72 @@
-import { BuiltType } from '../src';
+import { BuiltType, NumberConstraint, Patterns, SetConstraint, StrConstraint } from '../src';
 
 describe('BuiltType', () => {
-  // it('Create a built type instance for string value and expect type instance to parse string value and number value with coercing and fails on number wihtout coercing', () => {
-  //   const str = BuiltType._str({ coerce: true });
+  it('Create a built type instance for string value and expect type instance to parse string value and number value with coercing and fails on number wihtout coercing', () => {
+    const str = BuiltType._str({ coerce: true });
 
-  //   let result = str.safeParse(1);
-  //   expect(result.success).toEqual(true);
-  //   result = str.safeParse('azandrew-sidoine');
-  //   expect(result.success).toEqual(true);
-  //   expect(result.data).toEqual('azandrew-sidoine');
+    let result = str.safeParse(1);
+    expect(result.success).toEqual(true);
+    result = str.safeParse('azandrew-sidoine');
+    expect(result.success).toEqual(true);
+    expect(result.data).toEqual('azandrew-sidoine');
 
-  //   const noCoerceStr = BuiltType._str();
-  //   result = noCoerceStr.safeParse(1);
-  //   expect(result.success).toEqual(false);
-  // });
+    const noCoerceStr = BuiltType._str();
+    result = noCoerceStr.safeParse(1);
+    expect(result.success).toEqual(false);
+  });
 
-  // it('Expect parse to fail with constraint applied', () => {
-  //   const str = BuiltType._str({
-  //     coerce: true,
-  //     constraint: new StrConstraint().pattern(Patterns.uuid),
-  //   });
+  it('Expect parse to fail with constraint applied', () => {
+    const str = BuiltType._str({
+      coerce: true,
+      constraint: new StrConstraint().pattern(Patterns.uuid),
+    });
 
-  //   let result = str.safeParse('azandrew-sidoine');
-  //   expect(result.success).toEqual(false);
+    let result = str.safeParse('azandrew-sidoine');
+    expect(result.success).toEqual(false);
 
-  //   result = str.safeParse('d28a0f59-a273-495a-a283-5bedf659a67a');
-  //   expect(result.success).toEqual(true);
-  // });
+    result = str.safeParse('d28a0f59-a273-495a-a283-5bedf659a67a');
+    expect(result.success).toEqual(true);
+  });
 
-  // it('expect safe parse to fail when not using coercing on string and passes when used', () => {
-  //   const num = BuiltType._num({ coerce: true });
+  it('expect safe parse to fail when not using coercing on string and passes when used', () => {
+    const num = BuiltType._num({ coerce: true });
 
-  //   let result = num.safeParse('1');
-  //   expect(result.success).toEqual(true);
+    let result = num.safeParse('1');
+    expect(result.success).toEqual(true);
 
-  //   const noCoerceNum = BuiltType._num();
-  //   result = noCoerceNum.safeParse('1');
-  //   expect(result.success).toEqual(false);
+    const noCoerceNum = BuiltType._num();
+    result = noCoerceNum.safeParse('1');
+    expect(result.success).toEqual(false);
 
-  //   result = num.safeParse(34);
+    result = num.safeParse(34);
 
-  //   expect(result.data).toEqual(34);
-  // });
+    expect(result.data).toEqual(34);
+  });
 
-  // it('Expect parse to fail on BuiltType._num() returned instance when constraint applied', () => {
-  //   const num = BuiltType._num({
-  //     coerce: true,
-  //     constraint: new NumberConstraint().min(2),
-  //   });
+  it('Expect parse to fail on BuiltType._num() returned instance when constraint applied', () => {
+    const num = BuiltType._num({
+      coerce: true,
+      constraint: new NumberConstraint().min(2),
+    });
 
-  //   let result = num.safeParse(0);
-  //   expect(result.success).toEqual(false);
+    let result = num.safeParse(0);
+    expect(result.success).toEqual(false);
 
-  //   result = num.safeParse(4);
-  //   expect(result.success).toEqual(true);
-  // });
+    result = num.safeParse(4);
+    expect(result.success).toEqual(true);
+  });
 
-  // it('Expect parse to fail on BuiltType._set() returned instance when applied', () => {
-  //   const set = BuiltType._set(BuiltType._num(), { coerce: true });
+  it('Expect parse to fail on BuiltType._set() returned instance when applied', () => {
+    const set = BuiltType._set(BuiltType._num(), { coerce: true });
 
-  //   let result = set.safeParse([1, 3, 4]);
-  //   expect(result.success).toEqual(true);
-  //   expect(Array.from(result.data?.values() ?? [])).toEqual([1, 3, 4]);
-  //   const builtSet = BuiltType._set(BuiltType._str(), {
-  //     constraint: new SetConstraint().nonempty(),
-  //   });
-  //   expect(builtSet.safeParse([]).success).toBe(false);
-  // });
+    let result = set.safeParse([1, 3, 4]);
+    expect(result.success).toEqual(true);
+    expect(Array.from(result.data?.values() ?? [])).toEqual([1, 3, 4]);
+    const builtSet = BuiltType._set(BuiltType._str(), {
+      constraint: new SetConstraint().nonempty(),
+    });
+    expect(builtSet.safeParse([]).success).toBe(false);
+  });
 
   it('evaluate built._object() implementation', () => {
     const person = BuiltType._object(
@@ -89,5 +89,52 @@ describe('BuiltType', () => {
     expect(result.success).toEqual(true);
     expect(result.data?.email).toEqual('johndoe@example.com');
     expect(result.data?.firstname).toEqual('John');
+  });
+
+  it('evaluate built._arr() implementation', () => {
+    const person = BuiltType._object(
+      {
+        email: BuiltType._str({ coerce: true }),
+        grades: BuiltType._array(BuiltType._num(), {coerce: true}).nullish(),
+      },
+    );
+
+    let result1 = person.safeParse({
+      email: 'johndoe@example.com',
+      grades: null
+    });
+
+    let result2 = person.safeParse({
+      email: 'johndoe@example.com',
+      grades: [10, 20, 4]
+    });
+
+    expect(result1.success).toEqual(true);
+    expect(result1.data?.grades).toEqual([]);
+
+    expect(result2.success).toEqual(true);
+    expect(result2.data?.grades).toEqual([10, 20, 4]);
+
+    const person2 = BuiltType._object(
+      {
+        email: BuiltType._str({ coerce: true }),
+        grades: BuiltType._array(BuiltType._num()),
+      },
+    );
+
+    result1 = person2.safeParse({
+      email: 'johndoe@example.com',
+      grades: null
+    });
+
+    result2 = person2.safeParse({
+      email: 'johndoe@example.com',
+      grades: [10, 20, 4]
+    });
+
+    expect(result1.success).toEqual(false);
+
+    expect(result2.success).toEqual(true);
+    expect(result2.data?.grades).toEqual([10, 20, 4]);
   });
 });

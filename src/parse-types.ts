@@ -54,6 +54,7 @@ export function createParseArray<T>(t: _Type<T>) {
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     let index = 0;
+    items = items ?? [];//  Make sure the item is an array before proceeding
     // Check if the variable is defined and if it an array before proceeding
     if (items && Array.isArray(items)) {
       items.forEach((item: any) => {

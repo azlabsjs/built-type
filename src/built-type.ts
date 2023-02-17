@@ -222,7 +222,13 @@ export class BuiltType {
     def?: PartrialTypeDef<ArrayConstraint>
   ): _Type<T[], TypeDef<ConstraintInterface>, unknown[]> {
     return createType<T[]>(
-      mergeTypeDefRequiredParams(new ArrayConstraint(), def),
+      mergeTypeDefRequiredParams(
+        new ArrayConstraint(),
+        def,
+        (_value: unknown) =>
+        // We convert null or undefined values to array
+          typeof _value !== 'undefined' && _value !== null ? _value : []
+      ),
       createParseArray(type_)
     );
   }
