@@ -74,5 +74,5 @@ export type PartrialTypeDef<TContraint extends ConstraintInterface = ConstraintI
 export type SafeParseReturnType<T> = {
   errors: any;
   success: boolean;
-  data?: T;
+  data?: T|null;
 };

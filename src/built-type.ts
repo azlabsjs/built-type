@@ -242,7 +242,7 @@ export class BuiltType {
               return Array.isArray(_value)
                 ? _value
                 : typeof _value === 'undefined' || _value === null
-                ? _value
+                ? []
                 : [_value];
             }
           : undefined

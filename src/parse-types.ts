@@ -95,7 +95,7 @@ export function createParseObject<T = object>(
         continue;
       }
       const result = tParseFn(prop._type, value[prop.inputKey]);
-      if (result.success && result.data) {
+      if (result.success) {
         _instance[prop.outputKey] = result.data;
       } else {
         hasErrors = true;
