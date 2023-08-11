@@ -83,7 +83,6 @@ export interface _AbstractType<
    *
    * if (result.success) {
    *  // TODO: interact with the parse result
-   *  console.log(result.data);
    * }
    * ```
    */
@@ -289,7 +288,7 @@ export class _Type<
     }
     const constraint = this._def.constraint.apply(value);
     const result = !constraint.fails()
-      ? this._parseFn(value)
+      ? this._safeParseNullish(value)
       : new TypeParseResult(undefined, true, constraint.errors, false);
     return result.fails
       ? {
@@ -301,6 +300,12 @@ export class _Type<
           errors: undefined,
           data: result.data,
         };
+  }
+
+  private _safeParseNullish(value: unknown) {
+    return typeof value === 'undefined' || (value === null && this.isOptional())
+      ? new TypeParseResult(value, false, undefined, false)
+      : this._parseFn(value);
   }
 
   rawParse(value: TInput) {
