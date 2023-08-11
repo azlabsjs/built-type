@@ -1,6 +1,11 @@
 import { ParseError } from './errors';
 import { TypeParseResult } from './parse-types';
-import { PartrialTypeDef, SafeParseReturnType, TypeDef } from './types';
+import {
+  ConstraintInterface,
+  PartrialTypeDef,
+  SafeParseReturnType,
+  TypeDef,
+} from './types';
 
 /**
  * @internal
@@ -65,7 +70,7 @@ export interface _AbstractType<
    *
    * ```
    */
-  parse(value: TInput): TOutput;
+  parse<T>(value: T | TInput): TOutput;
 
   /**
    * Parse user provided value using the built-type.
@@ -82,7 +87,7 @@ export interface _AbstractType<
    * }
    * ```
    */
-  safeParse(value: TInput): SafeParseReturnType<TOutput>;
+  safeParse<T>(value: T | TInput): SafeParseReturnType<TOutput>;
 
   /**
    * `isOptional` returns boolean value indicating whether the
@@ -101,6 +106,23 @@ export interface _AbstractType<
    */
   describe(description: string): _AbstractType<TOutput, Def, TInput>;
 }
+
+/**
+ * @internal
+ */
+export type _ObjecType<T extends RawShapeType> = _AbstractType<
+  {
+    [Prop in keyof T]: TypeOf<T[Prop]>;
+  },
+  TypeDef<ConstraintInterface>
+> & {
+  /**
+   * TODO: Provide a better implementation to detect the reverseType instance type
+   *
+   * The reverse type of the current object
+   */
+  reverseType: _AbstractType<Record<string, any>, any, T>;
+};
 
 /**
  * @internal
@@ -170,7 +192,9 @@ export class _Type<
   readonly _parseFn!: (value: any) => TypeParseResult<TOutput>;
   private _reverseType?: _AbstractType<TInput, Def, TOutput>;
   // The reverse type factory allow to provide a deferred reverse built-type implementation
-  private _reverseTypeFactory!: (() => _Type<TInput, Def, TOutput>) | undefined;
+  private _reverseTypeFactory!:
+    | (() => _AbstractType<TInput, Def, TOutput>)
+    | undefined;
 
   get description() {
     return this._def.description;
@@ -188,7 +212,7 @@ export class _Type<
   constructor(
     def: Def,
     _parseFn?: (value: any) => TypeParseResult<TOutput>,
-    _reverseTypeFactory?: () => _Type<TInput, Def, TOutput>
+    _reverseTypeFactory?: () => _AbstractType<TInput, Def, TOutput>
   ) {
     if (def) {
       this._def = def;
@@ -222,8 +246,8 @@ export class _Type<
    *
    * ```
    */
-  parse(value: TInput) {
-    const result = this.safeParse(value);
+  parse<T>(value: T | TInput): TOutput {
+    const result = this.safeParse(value as any as TInput);
     if (!result.success) {
       throw new ParseError(
         result.errors,
@@ -245,12 +269,11 @@ export class _Type<
    * const result = type.safeParse({ ... }); // `SafeParseReturnType`
    *
    * if (result.success) {
-   *  // TODO: interact with the parse result
    *  console.log(result.data);
    * }
    * ```
    */
-  safeParse(value: TInput): SafeParseReturnType<TOutput> {
+  safeParse<T>(value: T | TInput): SafeParseReturnType<TOutput> {
     if (this._def.coerce) {
       value = this._def.coerce(value);
     }
@@ -326,5 +349,5 @@ export const createType = <
 >(
   def: Def,
   _parseFn?: (value: any) => TypeParseResult<TOutput>,
-  _reverseTypeFactory?: () => _Type<TInput, Def, TOutput>
+  _reverseTypeFactory?: () => _AbstractType<TInput, Def, TOutput>
 ) => new _Type<TOutput, Def, TInput>(def, _parseFn, _reverseTypeFactory);

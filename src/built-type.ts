@@ -1,4 +1,10 @@
-import { RawShapeType, TypeOf, _AbstractType, createType } from './base';
+import {
+  RawShapeType,
+  TypeOf,
+  _AbstractType,
+  _ObjecType,
+  createType,
+} from './base';
 import {
   createObjectReverseShape,
   createPropMapFunc,
@@ -10,7 +16,7 @@ import {
   createParseArray,
   createParseMap,
   createParseObject,
-  createParseSet
+  createParseSet,
 } from './parse-types';
 import {
   ArrayConstraint,
@@ -24,7 +30,7 @@ import {
   ObjectConstraint,
   SetConstraint,
   StrConstraint,
-  SymbolConstraint
+  SymbolConstraint,
 } from './type-constraints';
 import { ConstraintInterface, PartrialTypeDef, TypeDef } from './types';
 
@@ -54,7 +60,7 @@ export class BuiltType {
    */
   static _str(
     def?: PartrialTypeDef<StrConstraint>
-  ): _AbstractType<string, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<string, TypeDef<ConstraintInterface>> {
     return createType<string>(
       mergeTypeDefRequiredParams(
         new StrConstraint(),
@@ -87,7 +93,7 @@ export class BuiltType {
    */
   static _num(
     def?: PartrialTypeDef<NumberConstraint>
-  ): _AbstractType<number, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<number, TypeDef<ConstraintInterface>> {
     return createType<number>(
       mergeTypeDefRequiredParams(
         new NumberConstraint(),
@@ -121,7 +127,7 @@ export class BuiltType {
    */
   static _bool(
     def?: PartrialTypeDef<BoolConstraint>
-  ): _AbstractType<boolean, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<boolean, TypeDef<ConstraintInterface>> {
     return createType<boolean>(
       mergeTypeDefRequiredParams(
         new BoolConstraint(),
@@ -155,7 +161,7 @@ export class BuiltType {
    */
   static _symbol(
     def?: PartrialTypeDef<SymbolConstraint>
-  ): _AbstractType<symbol, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<symbol, TypeDef<ConstraintInterface>> {
     return createType<symbol>(
       mergeTypeDefRequiredParams(
         new SymbolConstraint(),
@@ -189,7 +195,7 @@ export class BuiltType {
    */
   static _date(
     def?: PartrialTypeDef<DateContraint>
-  ): _AbstractType<Date, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<Date, TypeDef<ConstraintInterface>> {
     return createType<Date>(
       mergeTypeDefRequiredParams(
         new DateContraint(),
@@ -226,7 +232,7 @@ export class BuiltType {
   static _array<T>(
     type_: _AbstractType<T>,
     def?: PartrialTypeDef<ArrayConstraint>
-  ): _AbstractType<T[], TypeDef<ConstraintInterface>, unknown[]> {
+  ): _AbstractType<T[], TypeDef<ConstraintInterface>> {
     return createType<T[]>(
       mergeTypeDefRequiredParams(
         new ArrayConstraint(),
@@ -299,7 +305,7 @@ export class BuiltType {
   ): _AbstractType<
     Map<TKey, TValue>,
     TypeDef<ConstraintInterface>,
-    Iterable<unknown>
+    Iterable<TValue>
   > {
     return createType<Map<TKey, TValue>>(
       mergeTypeDefRequiredParams(
@@ -339,7 +345,7 @@ export class BuiltType {
   ): _AbstractType<
     Set<TValue>,
     TypeDef<ConstraintInterface>,
-    Iterable<unknown>
+    Iterable<TValue>
   > {
     return createType<Set<TValue>>(
       mergeTypeDefRequiredParams(
@@ -421,20 +427,18 @@ export class BuiltType {
    */
   static _object<T extends RawShapeType>(
     dict: T,
-    propMap?: Partial<{ [k in keyof T]: string }>,
+    propMap: Partial<{ [k in keyof T]: string }> = {},
     def?: Omit<PartrialTypeDef, 'coerce'>
   ) {
-    return createType<{
-      [Prop in keyof typeof dict]: TypeOf<typeof dict[Prop]>;
-    }>(
+    return createType(
       mergeTypeDefRequiredParams(new ObjectConstraint(), def),
       createParseObject<{
-        [Prop in keyof typeof dict]: TypeOf<typeof dict[Prop]>;
+        [Prop in keyof T]: TypeOf<T[Prop]>;
       }>(
         createPropMapFunc(dict, propMap),
         (_type, value) => safeParse(value, _type),
         new Object() as {
-          [Prop in keyof typeof dict]: TypeOf<typeof dict[Prop]>;
+          [Prop in keyof T]: TypeOf<T[Prop]>;
         }
       ),
       // Provide an object reverse type factory function
@@ -465,6 +469,6 @@ export class BuiltType {
           )
         );
       }
-    );
+    ) as unknown as _ObjecType<T>;
   }
 }

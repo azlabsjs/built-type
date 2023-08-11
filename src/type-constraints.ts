@@ -291,7 +291,6 @@ export class SymbolConstraint extends Constraint {
  * ```
  */
 export class DateContraint extends Constraint {
-  // TODO : Add JSDate.isValid()
   expectType = (_value: any) =>
     _value instanceof Date ||
     (typeof _value === 'object' &&
@@ -411,7 +410,6 @@ export class ObjectConstraint extends Constraint {
     if (typeof value !== 'object') {
       return false;
     }
-    // TODO: Provide an implementation that make more checks
     return true;
   };
 
@@ -432,19 +430,6 @@ export class ObjectConstraint extends Constraint {
     });
     return this;
   }
-
-  // ofType<T>(key: string, type_: 'number' | 'symbol' | 'string' | 'object' | (new() => any), message?: string) {
-  //     this._map.set('required', {
-  //         fn: (value: any) => {
-  //             if (['number', 'symbol', 'string', 'object'].indexOf(type_ as string) !== -1) {
-  //                 return typeof value === type_;
-  //             }
-  //             return value instanceof type_.constructor;
-  //         },
-  //         message: message ?? `Expect object key ${key} to be instance of ${String(type_)}`
-  //     });
-  //     return this;
-  // }
 }
 
 /**

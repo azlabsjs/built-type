@@ -121,14 +121,13 @@ describe('BuiltType', () => {
     expect(john.address.email).toEqual('john-peter@example.com');
     expect(john.address.phoneNumber).toEqual('+1802499825');
 
-    if (Person.reverseType) {
-      const source = Person.reverseType.parse(john);
-      expect(source.first_name).toEqual('Peter');
-      expect(source.last_name).toEqual('John');
-      expect(source.age).toEqual(23);
-      expect(source.address.phone_number).toEqual('+1802499825');
-      expect(source.address.email).toEqual('john-peter@example.com');
-      expect(source.grades).toEqual([]);
-    }
+    
+    const source = Person.reverseType.parse(john);
+    expect(source.first_name).toEqual('Peter');
+    expect(source.last_name).toEqual('John');
+    expect(source.age).toEqual(23);
+    expect(source.address.phone_number).toEqual('+1802499825');
+    expect(source.address.email).toEqual('john-peter@example.com');
+    expect(source.grades).toEqual([]);
   });
 });
