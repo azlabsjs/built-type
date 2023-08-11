@@ -5,7 +5,7 @@ import { PartrialTypeDef, SafeParseReturnType, TypeDef } from './types';
 /**
  * @internal
  */
-export type TypeAny = _Type<any, any, any>;
+export type TypeAny = _AbstractType<any, any, any>;
 
 /**
  * @interna
@@ -24,15 +24,83 @@ export type RawShapeType = { [k: string]: TypeAny };
  *    lastname: BuiltType.str()
  * });
  *
- * export type Person = infer(person);
+ * export type Person = infer<typeof person>;
  * ```
  */
-export type TypeOf<T extends _Type<unknown, any, unknown>> = T['_output'];
+export type TypeOf<T extends _AbstractType<unknown, any, unknown>> =
+  T['_output'];
 
 /**
  * Export the Typeof type operator as `infer`
  */
 export type { TypeOf as infer };
+
+export interface _AbstractType<
+  TOutput,
+  Def extends TypeDef = TypeDef,
+  TInput = TOutput
+> {
+  _type: TOutput;
+  _output: TOutput;
+  _input: TInput;
+  _def: Def;
+
+  /**
+   * Copy the current object updating type definition and the parse function.
+   */
+  copy(
+    def: PartrialTypeDef,
+    _parseFn?: (value: any) => TypeParseResult<TOutput>
+  ): _AbstractType<TOutput, Def, TInput>;
+
+  /**
+   * Parse user provided value using the built-type.
+   * It throws a `ParseError` error instance if the parsing fails.
+   *
+   * ```ts
+   * const type = new BuiltType._object({ ... })
+   *
+   * // parsing a value using the type built type
+   * const result = type.parse({ ... }); // throws `ParseError`
+   *
+   * ```
+   */
+  parse(value: TInput): TOutput;
+
+  /**
+   * Parse user provided value using the built-type.
+   *
+   * ```ts
+   * const type = new BuiltType._object({ ... })
+   *
+   * // parsing a value using the type built type
+   * const result = type.safeParse({ ... }); // `SafeParseReturnType`
+   *
+   * if (result.success) {
+   *  // TODO: interact with the parse result
+   *  console.log(result.data);
+   * }
+   * ```
+   */
+  safeParse(value: TInput): SafeParseReturnType<TOutput>;
+
+  /**
+   * `isOptional` returns boolean value indicating whether the
+   * type support optional values
+   */
+  isOptional(): boolean;
+
+  /**
+   * `isOptional` returns boolean value indicating whether the
+   * type support null values
+   */
+  isNullable(): boolean;
+
+  /**
+   * Describe the built-type
+   */
+  describe(description: string): _AbstractType<TOutput, Def, TInput>;
+}
 
 /**
  * @internal
@@ -92,44 +160,66 @@ export type { TypeOf as infer };
 export class _Type<
   TOutput = any,
   Def extends TypeDef = TypeDef,
-  TInput = unknown
-> {
+  TInput = TOutput
+> implements _AbstractType<TOutput, Def, TInput>
+{
   readonly _type!: TOutput;
   readonly _output!: TOutput;
+  readonly _input!: TInput;
   readonly _def!: Def;
   readonly _parseFn!: (value: any) => TypeParseResult<TOutput>;
+  private _reverseType?: _AbstractType<TInput, Def, TOutput>;
+  // The reverse type factory allow to provide a deferred reverse built-type implementation
+  private _reverseTypeFactory!: (() => _Type<TInput, Def, TOutput>) | undefined;
 
   get description() {
     return this._def.description;
   }
 
-  constructor(def: Def, _parseFn?: (value: any) => TypeParseResult<TOutput>) {
+  get reverseType(): _AbstractType<TInput, Def, TOutput> | undefined {
+    if (!this._reverseType) {
+      this._reverseType = this._reverseTypeFactory
+        ? this._reverseTypeFactory()
+        : undefined;
+    }
+    return this._reverseType;
+  }
+
+  constructor(
+    def: Def,
+    _parseFn?: (value: any) => TypeParseResult<TOutput>,
+    _reverseTypeFactory?: () => _Type<TInput, Def, TOutput>
+  ) {
     if (def) {
       this._def = def;
     }
     this._parseFn =
       _parseFn ??
       ((value: any) => new TypeParseResult(value as TOutput, false));
+    this._reverseTypeFactory = _reverseTypeFactory;
   }
 
   /**
    * Copy the current object updating type definition and the parse function.
    */
-  copy(def: PartrialTypeDef, _parseFn?: (value: any) => TypeParseResult<TOutput>) {
-    const self  = (this as any).constructor;
-    return self({...this._def, ...def }, _parseFn ?? this._parseFn);
+  copy(
+    def: PartrialTypeDef,
+    _parseFn?: (value: any) => TypeParseResult<TOutput>
+  ) {
+    const self = (this as any).constructor;
+    return self({ ...this._def, ...def }, _parseFn ?? this._parseFn);
   }
 
   /**
-   * Parse user provided value using the built-type. 
+   * Parse user provided value using the built-type.
    * It throws a `ParseError` error instance if the parsing fails.
-   * 
+   *
    * ```ts
    * const type = new BuiltType._object({ ... })
-   * 
+   *
    * // parsing a value using the type built type
    * const result = type.parse({ ... }); // throws `ParseError`
-   * 
+   *
    * ```
    */
   parse(value: TInput) {
@@ -147,15 +237,15 @@ export class _Type<
 
   /**
    * Parse user provided value using the built-type.
-   * 
+   *
    * ```ts
    * const type = new BuiltType._object({ ... })
-   * 
+   *
    * // parsing a value using the type built type
    * const result = type.safeParse({ ... }); // `SafeParseReturnType`
-   * 
+   *
    * if (result.success) {
-   *  // TODO: interact with the parse result 
+   *  // TODO: interact with the parse result
    *  console.log(result.data);
    * }
    * ```
@@ -184,7 +274,7 @@ export class _Type<
     if (this._def.coerce) {
       value = this._def.coerce(value);
     }
-    return (this._parseFn)(value);
+    return this._parseFn(value);
   }
 
   /**
@@ -207,7 +297,11 @@ export class _Type<
    * Describe the built-type
    */
   describe(description: string) {
-    const self = (this as any).constructor as new (...args: any) => _Type;
+    const self = (this as any).constructor as new (...args: any) => _Type<
+      TOutput,
+      Def,
+      TInput
+    >;
     return new self({
       ...this._def,
       description,
@@ -221,5 +315,6 @@ export const createType = <
   TInput = any
 >(
   def: Def,
-  _parseFn?: (value: any) => TypeParseResult<TOutput>
-) => new _Type<TOutput, Def, TInput>(def, _parseFn);
+  _parseFn?: (value: any) => TypeParseResult<TOutput>,
+  _reverseTypeFactory?: () => _Type<TInput, Def, TOutput>
+) => new _Type<TOutput, Def, TInput>(def, _parseFn, _reverseTypeFactory);

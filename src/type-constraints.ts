@@ -45,8 +45,7 @@ abstract class Constraint implements ConstraintInterface {
     }
     if (
       this._undefined === true &&
-      value === null &&
-      typeof value === 'undefined'
+      (value === null || typeof value === 'undefined')
     ) {
       return this;
     }
@@ -78,14 +77,14 @@ abstract class Constraint implements ConstraintInterface {
 /**
  * Defines a string constraint class that can be applied to
  * built string types
- * 
+ *
  * ```ts
  * import { StrConstraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new StrConstraint)
  *                      .minLength(2)
  *                      .maxLength(10);
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply('Hello').fails(); // false
  * constraint.apply('Hello World! Welcome').fails(); // true
@@ -169,13 +168,13 @@ export class StrConstraint extends Constraint {
 /**
  * Defines a number constraint class that can be applied to
  * built number types
- * 
+ *
  * ```ts
  * import { NumberConstraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new NumberConstraint)
  *                      .min(2);
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply(3).fails(); // false
  * constraint.apply(1).fails(); // true
@@ -257,13 +256,13 @@ export class NumberConstraint extends Constraint {
 /**
  * Defines a boolean constraint class that can be applied to
  * built boolean types
- * 
- * 
+ *
+ *
  * ```ts
  * import { BoolConstraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new BoolConstraint);
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply(true).fails(); // false
  * constraint.apply('Hello').fails(); // true
@@ -284,12 +283,12 @@ export class SymbolConstraint extends Constraint {
 /**
  * Defines a date constraint class that can be applied to
  * built date types
- * 
+ *
  * ```ts
  * import { DateContraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new DateContraint).max(new Date());
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply(new Date('2021-11-10')).fails();
  * ```
@@ -350,17 +349,17 @@ export class DateContraint extends Constraint {
 /**
  * Defines an array constraint class that can be applied to
  * built array types
- * 
+ *
  * ```ts
  * import { ArrayConstraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new ArrayConstraint).nonempty();
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply([]).fails(); // true
- * 
+ *
  * const constraint2 = (new ArrayConstraint).min(2);
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply([2]).fails(); // true
  * constraint.apply([2, 4, 5]).fails(); // false
@@ -462,12 +461,12 @@ export class NoConstraint extends Constraint {
 /**
  * Defines a null and undefined constraint class that can be applied to
  * built null and undefined types
- * 
+ *
  * ```ts
  * import { NullishConstraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new NullishConstraint);
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply(null).fails(); // false
  * constraint.apply(undefined).fails(); // false
@@ -482,12 +481,12 @@ export class NullishConstraint extends Constraint {
 /**
  * Defines a null constraint class that can be applied to
  * built null types
- * 
+ *
  * ```ts
  * import { NullConstraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new NullConstraint);
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply(null).fails(); // false
  * constraint.apply(34).fails(); // true
@@ -523,17 +522,17 @@ export class MapConstraint extends Constraint {
 /**
  * Defines a set instance constraint class that can be applied to
  * built set types
- * 
+ *
  * ```ts
  * import { SetConstraint } from '@azlabsjs/built-type';
- * 
+ *
  * const constraint = (new SetConstraint).nonempty();
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply(new Set()).fails(); // true
- * 
+ *
  * const constraint2 = (new ArrayConstraint).min(2);
- * 
+ *
  * // Invoke the constraint on a value
  * constraint.apply(new Set([2])).fails(); // true
  * constraint.apply(new Set([2, 4, 5])).fails(); // false

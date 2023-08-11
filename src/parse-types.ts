@@ -1,5 +1,6 @@
-import { _Type } from './base';
+import { TypeAny, _AbstractType } from './base';
 import { createPropMapFunc } from './helpers';
+import { SafeParseReturnType } from './types';
 
 /**
  * @internal
@@ -46,14 +47,14 @@ export class TypeParseResult<TData, TError = unknown> {
  *
  * Creates a function that parses javascript array
  */
-export function createParseArray<T>(t: _Type<T>) {
+export function createParseArray<T>(t: _AbstractType<T>) {
   // TODO: Handle async parsing
   return (items: unknown[]) => {
     const output: T[] = [];
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     let index = 0;
-    items.forEach((item: any) => {
+    (items ?? []).forEach((item: any) => {
       const result = t.safeParse(item);
       if (result.success && result.data) {
         output.push(result.data as T);
@@ -79,6 +80,7 @@ export function createParseArray<T>(t: _Type<T>) {
  */
 export function createParseObject<T>(
   createProp: ReturnType<typeof createPropMapFunc>,
+  tParseFn: (_type: TypeAny, value: unknown) => SafeParseReturnType<any>,
   instance: T,
   root = 'root$'
 ) {
@@ -92,7 +94,7 @@ export function createParseObject<T>(
       if (!(prop.inputKey in value)) {
         continue;
       }
-      const result = prop._type.safeParse(value[prop.inputKey]);
+      const result = tParseFn(prop._type, value[prop.inputKey]);
       if (result.success && result.data) {
         _instance[prop.outputKey] = result.data;
       } else {
@@ -115,8 +117,8 @@ export function createParseObject<T>(
  * Creates a function that parses a javascript map
  */
 export function createParseMap<TKey, TValue>(
-  _key: _Type<TKey>,
-  _value: _Type<TValue>
+  _key: _AbstractType<TKey>,
+  _value: _AbstractType<TValue>
 ) {
   return (items: Map<any, any>) => {
     const _instance: Map<TKey, TValue> = new Map();
@@ -147,7 +149,7 @@ export function createParseMap<TKey, TValue>(
  * Creates a function that parses a javascript set to user defined
  * Set type
  */
-export function createParseSet<TValue>(t: _Type<TValue>) {
+export function createParseSet<TValue>(t: _AbstractType<TValue>) {
   return (items: Set<any>) => {
     const _instance: Set<TValue> = new Set();
     const _errors: { [k: string]: unknown } = {} as any;
