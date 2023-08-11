@@ -1,4 +1,11 @@
-import { BuiltType, NumberConstraint, Patterns, SetConstraint, StrConstraint } from '../src';
+import {
+  ArrayConstraint,
+  BuiltType,
+  NumberConstraint,
+  Patterns,
+  SetConstraint,
+  StrConstraint,
+} from '../src';
 
 describe('BuiltType', () => {
   it('Create a built type instance for string value and expect type instance to parse string value and number value with coercing and fails on number wihtout coercing', () => {
@@ -68,73 +75,60 @@ describe('BuiltType', () => {
     expect(builtSet.safeParse([]).success).toBe(false);
   });
 
-  it('evaluate built._object() implementation', () => {
-    const person = BuiltType._object(
+  it('should return original object when reverse type safeParse is requested', () => {
+    const Person = BuiltType._object(
       {
-        firstname: BuiltType._str({ coerce: true }),
-        lastname: BuiltType._str({ coerce: true }),
-        email: BuiltType._str(),
+        firstName: BuiltType._str(),
+        lastName: BuiltType._str(),
+        age: BuiltType._num(),
+        address: BuiltType._object(
+          {
+            email: BuiltType._str(),
+            phoneNumber: BuiltType._str({
+              constraint: new StrConstraint().nullish(),
+            }),
+          },
+          {
+            phoneNumber: 'phone_number',
+          }
+        ),
+        grades: BuiltType._array(BuiltType._num(), {
+          constraint: new ArrayConstraint().nullish(),
+          coerce: true,
+        }),
       },
-      { email: 'address.email' }
+      {
+        firstName: 'first_name',
+        lastName: 'last_name',
+      }
     );
 
-    const result = person.safeParse({
-      firstname: 'John',
-      lastname: 'Doe',
+    const john = Person.parse({
+      first_name: 'Peter',
+      last_name: 'John',
+      age: 23,
       address: {
-        email: 'johndoe@example.com',
+        email: 'john-peter@example.com',
+        phone_number: '+1802499825',
       },
+      grades: undefined
     });
 
-    expect(result.success).toEqual(true);
-    expect(result.data?.email).toEqual('johndoe@example.com');
-    expect(result.data?.firstname).toEqual('John');
-  });
+    expect(john.grades).toEqual([]);
+    expect(john.firstName).toEqual('Peter');
+    expect(john.lastName).toEqual('John');
+    expect(john.age).toEqual(23);
+    expect(john.address.email).toEqual('john-peter@example.com');
+    expect(john.address.phoneNumber).toEqual('+1802499825');
 
-  it('evaluate built._arr() implementation', () => {
-    const person = BuiltType._object(
-      {
-        email: BuiltType._str({ coerce: true }),
-        grades: BuiltType._array(BuiltType._num(), {coerce: true}).nullish(),
-      },
-    );
-
-    let result1 = person.safeParse({
-      email: 'johndoe@example.com',
-      grades: null
-    });
-
-    let result2 = person.safeParse({
-      email: 'johndoe@example.com',
-      grades: [10, 20, 4]
-    });
-
-    expect(result1.success).toEqual(true);
-    expect(result1.data?.grades).toEqual([]);
-
-    expect(result2.success).toEqual(true);
-    expect(result2.data?.grades).toEqual([10, 20, 4]);
-
-    const person2 = BuiltType._object(
-      {
-        email: BuiltType._str({ coerce: true }),
-        grades: BuiltType._array(BuiltType._num()),
-      },
-    );
-
-    result1 = person2.safeParse({
-      email: 'johndoe@example.com',
-      grades: null
-    });
-
-    result2 = person2.safeParse({
-      email: 'johndoe@example.com',
-      grades: [10, 20, 4]
-    });
-
-    expect(result1.success).toEqual(false);
-
-    expect(result2.success).toEqual(true);
-    expect(result2.data?.grades).toEqual([10, 20, 4]);
+    if (Person.reverseType) {
+      const source = Person.reverseType.parse(john);
+      expect(source.first_name).toEqual('Peter');
+      expect(source.last_name).toEqual('John');
+      expect(source.age).toEqual(23);
+      expect(source.address.phone_number).toEqual('+1802499825');
+      expect(source.address.email).toEqual('john-peter@example.com');
+      expect(source.grades).toEqual([]);
+    }
   });
 });

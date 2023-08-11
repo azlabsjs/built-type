@@ -45,9 +45,8 @@ abstract class Constraint implements ConstraintInterface {
       return this;
     }
     if (
-      this._undefined &&
-      this._null &&
-      (typeof value === 'undefined' || value === null)
+      this._undefined === true &&
+      (value === null || typeof value === 'undefined')
     ) {
       return this;
     }

@@ -1,5 +1,11 @@
-import { createType, RawShapeType, TypeOf, _Type } from './base';
-import { createPropMapFunc, mergeTypeDefRequiredParams } from './helpers';
+import { RawShapeType, TypeOf, _AbstractType, createType } from './base';
+import {
+  createObjectReverseShape,
+  createPropMapFunc,
+  mergeTypeDefRequiredParams,
+  safeParse,
+  safeParseReverse,
+} from './helpers';
 import {
   createParseArray,
   createParseMap,
@@ -48,7 +54,7 @@ export class BuiltType {
    */
   static _str(
     def?: PartrialTypeDef<StrConstraint>
-  ): _Type<string, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<string, TypeDef<ConstraintInterface>, unknown> {
     return createType<string>(
       mergeTypeDefRequiredParams(
         new StrConstraint(),
@@ -81,7 +87,7 @@ export class BuiltType {
    */
   static _num(
     def?: PartrialTypeDef<NumberConstraint>
-  ): _Type<number, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<number, TypeDef<ConstraintInterface>, unknown> {
     return createType<number>(
       mergeTypeDefRequiredParams(
         new NumberConstraint(),
@@ -115,7 +121,7 @@ export class BuiltType {
    */
   static _bool(
     def?: PartrialTypeDef<BoolConstraint>
-  ): _Type<boolean, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<boolean, TypeDef<ConstraintInterface>, unknown> {
     return createType<boolean>(
       mergeTypeDefRequiredParams(
         new BoolConstraint(),
@@ -149,7 +155,7 @@ export class BuiltType {
    */
   static _symbol(
     def?: PartrialTypeDef<SymbolConstraint>
-  ): _Type<symbol, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<symbol, TypeDef<ConstraintInterface>, unknown> {
     return createType<symbol>(
       mergeTypeDefRequiredParams(
         new SymbolConstraint(),
@@ -183,7 +189,7 @@ export class BuiltType {
    */
   static _date(
     def?: PartrialTypeDef<DateContraint>
-  ): _Type<Date, TypeDef<ConstraintInterface>, unknown> {
+  ): _AbstractType<Date, TypeDef<ConstraintInterface>, unknown> {
     return createType<Date>(
       mergeTypeDefRequiredParams(
         new DateContraint(),
@@ -218,16 +224,22 @@ export class BuiltType {
    *
    */
   static _array<T>(
-    type_: _Type<T>,
+    type_: _AbstractType<T>,
     def?: PartrialTypeDef<ArrayConstraint>
-  ): _Type<T[], TypeDef<ConstraintInterface>, unknown[]> {
+  ): _AbstractType<T[], TypeDef<ConstraintInterface>, unknown[]> {
     return createType<T[]>(
       mergeTypeDefRequiredParams(
         new ArrayConstraint(),
         def,
-        (_value: unknown) =>
-        // We convert null or undefined values to array
-          typeof _value !== 'undefined' && _value !== null ? _value : []
+        def?.coerce
+          ? (_value) => {
+              return Array.isArray(_value)
+                ? _value
+                : typeof _value === 'undefined' || _value === null
+                ? _value
+                : [_value];
+            }
+          : undefined
       ),
       createParseArray(type_)
     );
@@ -281,10 +293,14 @@ export class BuiltType {
    * ```
    */
   static _map<TKey, TValue>(
-    tKey: _Type<TKey>,
-    tValue: _Type<TValue>,
+    tKey: _AbstractType<TKey>,
+    tValue: _AbstractType<TValue>,
     def?: PartrialTypeDef<MapConstraint>
-  ): _Type<Map<TKey, TValue>, TypeDef<ConstraintInterface>, Iterable<unknown>> {
+  ): _AbstractType<
+    Map<TKey, TValue>,
+    TypeDef<ConstraintInterface>,
+    Iterable<unknown>
+  > {
     return createType<Map<TKey, TValue>>(
       mergeTypeDefRequiredParams(
         new MapConstraint(),
@@ -318,9 +334,13 @@ export class BuiltType {
    *
    */
   static _set<TValue>(
-    tValue: _Type<TValue>,
+    tValue: _AbstractType<TValue>,
     def?: PartrialTypeDef<SetConstraint>
-  ): _Type<Set<TValue>, TypeDef<ConstraintInterface>, Iterable<unknown>> {
+  ): _AbstractType<
+    Set<TValue>,
+    TypeDef<ConstraintInterface>,
+    Iterable<unknown>
+  > {
     return createType<Set<TValue>>(
       mergeTypeDefRequiredParams(
         new SetConstraint(),
@@ -405,12 +425,46 @@ export class BuiltType {
     def?: Omit<PartrialTypeDef, 'coerce'>
   ) {
     return createType<{
-      [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
+      [Prop in keyof typeof dict]: TypeOf<typeof dict[Prop]>;
     }>(
       mergeTypeDefRequiredParams(new ObjectConstraint(), def),
       createParseObject<{
-        [Property in keyof typeof dict]: TypeOf<typeof dict[Property]>;
-      }>(createPropMapFunc(dict, propMap))
+        [Prop in keyof typeof dict]: TypeOf<typeof dict[Prop]>;
+      }>(
+        createPropMapFunc(dict, propMap),
+        (_type, value) => safeParse(value, _type),
+        new Object() as {
+          [Prop in keyof typeof dict]: TypeOf<typeof dict[Prop]>;
+        }
+      ),
+      // Provide an object reverse type factory function
+      // which is internally invoked if developper request for a reverseType instance
+      () => {
+        const [_shape, _propMap, _def] = createObjectReverseShape(
+          dict,
+          propMap,
+          def
+        );
+        return createType(
+          _def,
+          createParseObject(
+            createPropMapFunc(
+              _shape,
+              _propMap as Partial<Record<keyof typeof _shape, string>>
+            ),
+            (_type, value) =>
+              safeParseReverse(
+                value,
+                _type as _AbstractType<any> & {
+                  reverseType: _AbstractType<unknown>;
+                }
+              ),
+            new Object() as {
+              [Prop in keyof typeof _shape]: TypeOf<typeof _shape[Prop]>;
+            }
+          )
+        );
+      }
     );
   }
 }
