@@ -1,5 +1,4 @@
 import {
-  ArrayConstraint,
   BuiltType,
   NumberConstraint,
   Patterns,
@@ -93,9 +92,8 @@ describe('BuiltType', () => {
           }
         ),
         grades: BuiltType._array(BuiltType._num(), {
-          constraint: new ArrayConstraint().nullish(),
           coerce: true,
-        }),
+        }).nullish(),
       },
       {
         firstName: 'first_name',
@@ -111,7 +109,7 @@ describe('BuiltType', () => {
         email: 'john-peter@example.com',
         phone_number: '+1802499825',
       },
-      grades: undefined
+      grades: undefined,
     });
 
     expect(john.grades).toEqual([]);
@@ -121,7 +119,6 @@ describe('BuiltType', () => {
     expect(john.address.email).toEqual('john-peter@example.com');
     expect(john.address.phoneNumber).toEqual('+1802499825');
 
-    
     const source = Person.reverseType.parse(john);
     expect(source.first_name).toEqual('Peter');
     expect(source.last_name).toEqual('John');

@@ -102,6 +102,16 @@ export interface _AbstractType<
   isNullable(): boolean;
 
   /**
+   * Add a nil `undefined|null` constraint to the type builder instance
+   */
+  nullable(): _AbstractType<TOutput, Def, TInput>;
+
+  /**
+   * Add a nullable `null` constraint to the type builder instance
+   */
+  nullish(): _AbstractType<TOutput, Def, TInput>;
+
+  /**
    * Describe the built-type
    */
   describe(description: string): _AbstractType<TOutput, Def, TInput>;
