@@ -81,13 +81,12 @@ export function createParseArray<T>(t: _AbstractType<T>) {
 export function createParseObject<T = object>(
   createProp: ReturnType<typeof createPropMapFunc>,
   tParseFn: (_type: TypeAny, value: unknown) => SafeParseReturnType<T>,
-  instance: T,
   root = 'root$'
 ) {
   return (value: any) => {
     // TODO: Handle async parsing
     const propMap = createProp();
-    const _instance = instance as any;
+    const _instance = new Object() as any;
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     for (const prop of propMap) {

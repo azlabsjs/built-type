@@ -434,12 +434,8 @@ export class BuiltType {
       mergeTypeDefRequiredParams(new ObjectConstraint(), def),
       createParseObject<{
         [Prop in keyof T]: TypeOf<T[Prop]>;
-      }>(
-        createPropMapFunc(dict, propMap),
-        (_type, value) => safeParse(value, _type),
-        new Object() as {
-          [Prop in keyof T]: TypeOf<T[Prop]>;
-        }
+      }>(createPropMapFunc(dict, propMap), (_type, value) =>
+        safeParse(value, _type)
       ),
       // Provide an object reverse type factory function
       // which is internally invoked if developper request for a reverseType instance
@@ -462,10 +458,7 @@ export class BuiltType {
                 _type as _AbstractType<any> & {
                   reverseType: _AbstractType<unknown>;
                 }
-              ),
-            new Object() as {
-              [Prop in keyof typeof _shape]: TypeOf<typeof _shape[Prop]>;
-            }
+              )
           )
         );
       }
