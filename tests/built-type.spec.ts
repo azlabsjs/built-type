@@ -111,7 +111,7 @@ describe('BuiltType', () => {
       },
       grades: undefined,
     });
-
+    
     expect(john.grades).toEqual([]);
     expect(john.firstName).toEqual('Peter');
     expect(john.lastName).toEqual(null);
