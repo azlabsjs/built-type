@@ -111,18 +111,7 @@ describe('BuiltType', () => {
       },
       grades: undefined,
     });
-
-    const hannah = Person.parse({
-      first_name: 'Hannah',
-      last_name: 'Montana',
-      age: 28,
-      address: {
-        email: 'hannah@example.com',
-        phone_number: '+18024023825',
-      },
-      grades: [],
-    });
-
+    
     expect(john.grades).toEqual([]);
     expect(john.firstName).toEqual('Peter');
     expect(john.lastName).toEqual(null);
