@@ -1,10 +1,4 @@
-import {
-  RawShapeType,
-  TypeOf,
-  _AbstractType,
-  _ObjecType,
-  createType,
-} from './base';
+import { createType } from './base';
 import {
   createObjectReverseShape,
   createPropMapFunc,
@@ -32,7 +26,15 @@ import {
   StrConstraint,
   SymbolConstraint,
 } from './type-constraints';
-import { ConstraintInterface, PartrialTypeDef, TypeDef } from './types';
+import {
+  ConstraintInterface,
+  PartrialTypeDef,
+  RawShapeType,
+  TypeDef,
+  TypeOf,
+  _AbstractType,
+  _ObjectType,
+} from './types';
 
 /**
  * BuiltType class provides developpers with factory methods for creating
@@ -462,6 +464,6 @@ export class BuiltType {
           )
         );
       }
-    ) as unknown as _ObjecType<T>;
+    ) as unknown as _ObjectType<T>;
   }
 }
