@@ -1,6 +1,10 @@
-import { TypeAny, _AbstractType } from './base';
+import { TypeAny } from './base';
 import { createPropMapFunc } from './helpers';
-import { SafeParseReturnType } from './types';
+import {
+  ParseValueResultType,
+  SafeParseReturnType,
+  _AbstractType,
+} from './types';
 
 /**
  * @internal
@@ -8,7 +12,9 @@ import { SafeParseReturnType } from './types';
  * Type value parsing instance class
  *
  */
-export class TypeParseResult<TData, TError = unknown> {
+export class TypeParseResult<TData, TError = unknown>
+  implements ParseValueResultType<TData, TError>
+{
   /**
    * Returns the parse result errors if any
    */

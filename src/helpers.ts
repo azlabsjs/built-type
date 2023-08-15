@@ -1,10 +1,12 @@
-import { RawShapeType, TypeAny, _AbstractType } from './base';
+import { TypeAny } from './base';
 import { ObjectConstraint } from './type-constraints';
 import {
   ConstraintInterface,
   PartrialTypeDef,
+  RawShapeType,
   SafeParseReturnType,
   TypeDef,
+  _AbstractType,
 } from './types';
 
 /**
