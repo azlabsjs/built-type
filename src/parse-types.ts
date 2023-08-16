@@ -1,3 +1,4 @@
+import { getObjectProperty } from '@azlabsjs/js-object';
 import { TypeAny } from './base';
 import { createPropMapFunc } from './helpers';
 import {
@@ -96,10 +97,7 @@ export function createParseObject<T = object>(
     const _errors: { [k: string]: unknown } = {} as any;
     let hasErrors = false;
     for (const prop of propMap) {
-      if (!(prop.inputKey in value)) {
-        continue;
-      }
-      const result = tParseFn(prop._type, value[prop.inputKey]);
+      const result = tParseFn(prop._type, getObjectProperty(value, prop.inputKey));
       if (result.success) {
         _instance[prop.outputKey] = result.data;
       } else {
