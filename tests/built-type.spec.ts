@@ -53,7 +53,7 @@ describe('BuiltType', () => {
     const num = BuiltType._num({
       coerce: true,
       constraint: new NumberConstraint().min(2),
-    });
+    }).nullish();
 
     let result = num.safeParse(0);
     expect(result.success).toEqual(false);
@@ -77,7 +77,7 @@ describe('BuiltType', () => {
   it('should return original object when reverse type safeParse is requested', () => {
     const Person = BuiltType._object(
       {
-        firstName: BuiltType._str(),
+        firstName: BuiltType._str().nullable(),
         lastName: BuiltType._str().nullish(),
         age: BuiltType._num(),
         address: BuiltType._object(

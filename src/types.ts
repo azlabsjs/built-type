@@ -200,12 +200,12 @@ export interface _AbstractType<
   /**
    * Add a nil `undefined|null` constraint to the type builder instance
    */
-  nullable(): _AbstractType<TOutput, Def, TInput>;
+  nullable(): _AbstractType<TOutput | null, Def, TInput>;
 
   /**
    * Add a nullable `null` constraint to the type builder instance
    */
-  nullish(): _AbstractType<TOutput, Def, TInput>;
+  nullish(): _AbstractType<TOutput | null | undefined, Def, TInput>;
 
   /**
    * Describe the built-type
