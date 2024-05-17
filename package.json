@@ -78,6 +78,6 @@
         "url": "git+https://github.com/azlabsjs/built-type.git"
     },
     "dependencies": {
-        "@azlabsjs/js-object": "^0.1.11"
+        "@azlabsjs/js-object": "^0.2.4"
     }
 }
