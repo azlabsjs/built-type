@@ -56,7 +56,7 @@
         }
     ],
     "devDependencies": {
-        "@azlabsjs/ts-build": "^0.4.18",
+        "@azlabsjs/ts-build": "^0.4.19",
         "@size-limit/preset-small-lib": "^8.1.0",
         "@types/jest": "^29.2.4",
         "@typescript-eslint/eslint-plugin": "^5.47.0",
