@@ -4,13 +4,14 @@ import {
   PartrialTypeDef,
   SafeParseReturnType,
   TypeDef,
+  UnknownType,
   _AbstractType,
 } from './types';
 
 /**
  * @internal
  */
-export type TypeAny = _AbstractType<any, any, any>;
+export type TypeAny = _AbstractType<UnknownType, UnknownType, UnknownType>;
 
 /**
  * @internal
@@ -68,16 +69,16 @@ export type TypeAny = _AbstractType<any, any, any>;
  *
  */
 export class _Type<
-  TOutput = any,
+  TOutput = UnknownType,
   Def extends TypeDef = TypeDef,
-  TInput = TOutput
+  TInput = TOutput,
 > implements _AbstractType<TOutput, Def, TInput>
 {
   readonly _type!: TOutput;
   readonly _output!: TOutput;
   readonly _input!: TInput;
   readonly _def!: Def;
-  readonly _parseFn!: (value: any) => TypeParseResult<TOutput>;
+  readonly _parseFn!: (value: unknown) => TypeParseResult<TOutput>;
   private _reverseType?: _AbstractType<TInput, Def, TOutput>;
   // The reverse type factory allow to provide a deferred reverse built-type implementation
   private _reverseTypeFactory!:
@@ -99,7 +100,7 @@ export class _Type<
 
   constructor(
     def: Def,
-    _parseFn?: (value: any) => TypeParseResult<TOutput>,
+    _parseFn?: (value: unknown) => TypeParseResult<TOutput>,
     _reverseTypeFactory?: () => _AbstractType<TInput, Def, TOutput>
   ) {
     if (def) {
@@ -107,7 +108,7 @@ export class _Type<
     }
     this._parseFn =
       _parseFn ??
-      ((value: any) => new TypeParseResult(value as TOutput, false));
+      ((value: unknown) => new TypeParseResult(value as TOutput, false));
     this._reverseTypeFactory = _reverseTypeFactory;
   }
 
@@ -116,9 +117,9 @@ export class _Type<
    */
   copy(
     def: PartrialTypeDef,
-    _parseFn?: (value: any) => TypeParseResult<TOutput>
+    _parseFn?: (value: unknown) => TypeParseResult<TOutput>
   ) {
-    const self = (this as any).constructor;
+    const self = this.constructor;
     return self({ ...this._def, ...def }, _parseFn ?? this._parseFn);
   }
 
@@ -135,7 +136,7 @@ export class _Type<
    * ```
    */
   parse<T>(value: T | TInput): TOutput {
-    const result = this.safeParse(value as any as TInput);
+    const result = this.safeParse(value as unknown as TInput);
     if (!result.success) {
       throw new ParseError(
         result.errors,
@@ -199,7 +200,7 @@ export class _Type<
    * type support optional values
    */
   isOptional(): boolean {
-    return this.safeParse(undefined as any).success;
+    return this.safeParse(undefined).success;
   }
 
   /**
@@ -207,7 +208,7 @@ export class _Type<
    * type support null values
    */
   isNullable(): boolean {
-    return this.safeParse(null as any).success;
+    return this.safeParse(null).success;
   }
 
   nullable() {
@@ -224,11 +225,9 @@ export class _Type<
    * Describe the built-type
    */
   describe(description: string) {
-    const self = (this as any).constructor as new (...args: any) => _Type<
-      TOutput,
-      Def,
-      TInput
-    >;
+    const self = this.constructor as new (
+      ...args: unknown[]
+    ) => _Type<TOutput, Def, TInput>;
     return new self({
       ...this._def,
       description,
@@ -237,11 +236,11 @@ export class _Type<
 }
 
 export const createType = <
-  TOutput = any,
+  TOutput = UnknownType,
   Def extends TypeDef = TypeDef,
-  TInput = any
+  TInput = UnknownType,
 >(
   def: Def,
-  _parseFn?: (value: any) => TypeParseResult<TOutput>,
+  _parseFn?: (value: UnknownType) => TypeParseResult<TOutput>,
   _reverseTypeFactory?: () => _AbstractType<TInput, Def, TOutput>
 ) => new _Type<TOutput, Def, TInput>(def, _parseFn, _reverseTypeFactory);

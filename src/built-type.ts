@@ -32,6 +32,7 @@ import {
   RawShapeType,
   TypeDef,
   TypeOf,
+  UnknownType,
   _AbstractType,
   _ObjectType,
 } from './types';
@@ -169,10 +170,8 @@ export class BuiltType {
         new SymbolConstraint(),
         def,
         def?.coerce
-          ? (_value) =>
-              typeof _value !== 'undefined' && _value !== null
-                ? Symbol(_value)
-                : _value
+          ? (v) =>
+              typeof v !== 'undefined' && v !== null ? Symbol(v as string) : v
           : undefined
       )
     );
@@ -206,7 +205,7 @@ export class BuiltType {
           ? (_value) =>
               typeof _value !== 'undefined' && _value !== null
                 ? !(_value instanceof Date)
-                  ? new Date(_value)
+                  ? new Date(_value as string)
                   : _value
                 : _value
           : undefined
@@ -232,7 +231,7 @@ export class BuiltType {
    *
    */
   static _array<T>(
-    type_: _AbstractType<T>,
+    t: _AbstractType<T>,
     def?: PartrialTypeDef<ArrayConstraint>
   ): _AbstractType<T[], TypeDef<ConstraintInterface>> {
     return createType<T[]>(
@@ -240,16 +239,16 @@ export class BuiltType {
         new ArrayConstraint(),
         def,
         def?.coerce
-          ? (_value) => {
-              return Array.isArray(_value)
-                ? _value
-                : typeof _value === 'undefined' || _value === null
+          ? (v) => {
+              return typeof v === 'undefined' || v === null
                 ? []
-                : [_value];
+                : Array.isArray(v)
+                  ? v
+                  : [v];
             }
           : undefined
       ),
-      createParseArray(type_)
+      createParseArray(t)
     );
   }
 
@@ -314,10 +313,10 @@ export class BuiltType {
         new MapConstraint(),
         def,
         def?.coerce
-          ? (_value) =>
-              typeof _value !== 'undefined' && _value !== null
-                ? new Map(_value)
-                : _value
+          ? (v) =>
+              typeof v !== 'undefined' && v !== null
+                ? new Map(v as Iterable<UnknownType>)
+                : v
           : undefined
       ),
       createParseMap(tKey, tValue)
@@ -342,7 +341,7 @@ export class BuiltType {
    *
    */
   static _set<TValue>(
-    tValue: _AbstractType<TValue>,
+    t: _AbstractType<TValue>,
     def?: PartrialTypeDef<SetConstraint>
   ): _AbstractType<
     Set<TValue>,
@@ -354,13 +353,13 @@ export class BuiltType {
         new SetConstraint(),
         def,
         def?.coerce
-          ? (_value) =>
-              typeof _value !== 'undefined' && _value !== null
-                ? new Set(_value)
-                : _value
+          ? (v) =>
+              typeof v !== 'undefined' && v !== null
+                ? new Set(v as Iterable<UnknownType>)
+                : v
           : undefined
       ),
-      createParseSet(tValue)
+      createParseSet(t)
     );
   }
 
@@ -379,7 +378,7 @@ export class BuiltType {
    *
    */
   static _mixed() {
-    return createType<any>({ constraint: new NoConstraint() });
+    return createType<UnknownType>({ constraint: new NoConstraint() });
   }
 
   /**
@@ -457,7 +456,7 @@ export class BuiltType {
             (_type, value) =>
               safeParseReverse(
                 value,
-                _type as _AbstractType<any> & {
+                _type as _AbstractType<UnknownType> & {
                   reverseType: _AbstractType<unknown>;
                 }
               )

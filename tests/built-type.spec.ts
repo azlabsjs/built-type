@@ -64,8 +64,7 @@ describe('BuiltType', () => {
 
   it('Expect parse to fail on BuiltType._set() returned instance when applied', () => {
     const set = BuiltType._set(BuiltType._num(), { coerce: true });
-
-    let result = set.safeParse([1, 3, 4]);
+    const result = set.safeParse([1, 3, 4]);
     expect(result.success).toEqual(true);
     expect(Array.from(result.data?.values() ?? [])).toEqual([1, 3, 4]);
     const builtSet = BuiltType._set(BuiltType._str(), {

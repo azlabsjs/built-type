@@ -4,6 +4,7 @@ import { createPropMapFunc } from './helpers';
 import {
   ParseValueResultType,
   SafeParseReturnType,
+  UnknownType,
   _AbstractType,
 } from './types';
 
@@ -55,13 +56,12 @@ export class TypeParseResult<TData, TError = unknown>
  * Creates a function that parses javascript array
  */
 export function createParseArray<T>(t: _AbstractType<T>) {
-  // TODO: Handle async parsing
   return (items: unknown[]) => {
     const output: T[] = [];
-    const _errors: { [k: string]: unknown } = {} as any;
+    const _errors: { [k: string]: unknown } = {} as UnknownType;
     let hasErrors = false;
     let index = 0;
-    (items ?? []).forEach((item: any) => {
+    (items ?? []).forEach((item: UnknownType) => {
       const result = t.safeParse(item);
       if (result.success && result.data) {
         output.push(result.data as T);
@@ -90,14 +90,17 @@ export function createParseObject<T = object>(
   tParseFn: (_type: TypeAny, value: unknown) => SafeParseReturnType<T>,
   root = 'root$'
 ) {
-  return (value: any) => {
+  return (value: UnknownType) => {
     // TODO: Handle async parsing
     const propMap = createProp();
-    const _instance = new Object() as any;
-    const _errors: { [k: string]: unknown } = {} as any;
+    const _instance = new Object() as UnknownType;
+    const _errors: { [k: string]: unknown } = {} as UnknownType;
     let hasErrors = false;
     for (const prop of propMap) {
-      const result = tParseFn(prop._type, getObjectProperty(value, prop.inputKey));
+      const result = tParseFn(
+        prop._type,
+        getObjectProperty(value, prop.inputKey)
+      );
       if (result.success) {
         _instance[prop.outputKey] = result.data;
       } else {
@@ -123,9 +126,9 @@ export function createParseMap<TKey, TValue>(
   _key: _AbstractType<TKey>,
   _value: _AbstractType<TValue>
 ) {
-  return (items: Map<any, any>) => {
+  return (items: Map<UnknownType, UnknownType>) => {
     const _instance: Map<TKey, TValue> = new Map();
-    const _errors = new Map<any, unknown>();
+    const _errors = new Map<UnknownType, unknown>();
     let hasErrors = false;
     // We first check if items variable is define before
     // setting map values
@@ -157,14 +160,14 @@ export function createParseMap<TKey, TValue>(
  * Set type
  */
 export function createParseSet<TValue>(t: _AbstractType<TValue>) {
-  return (items: Set<any>) => {
+  return (items: Set<UnknownType>) => {
     const _instance: Set<TValue> = new Set();
-    const _errors: { [k: string]: unknown } = {} as any;
+    const _errors: { [k: string]: unknown } = {} as UnknownType;
     let hasErrors = false;
     let index = 0;
     // Checks if the input set is defines before proceeding
     if (items) {
-      items.forEach((item: any) => {
+      items.forEach((item: UnknownType) => {
         const result = t.safeParse(item);
         if (result.success) {
           _instance.add(result.data as TValue);

@@ -1,3 +1,7 @@
+/** @internal */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnknownType = any;
+
 /**
  * A constraint is a set of rules that can be applied to a given type
  * to insure that runtime code execute safely
@@ -11,7 +15,7 @@ export interface ConstraintInterface {
   /**
    * Constraint expected type
    */
-  expectType: string | ((value: any) => boolean);
+  expectType: string | ((value: unknown) => boolean);
 
   /**
    * Constraint the variable to support null type
@@ -42,7 +46,7 @@ export interface ConstraintInterface {
   /**
    * Call the constraint on user provided value
    */
-  apply(value: any): ConstraintInterface;
+  apply(value: unknown): ConstraintInterface;
 }
 
 /**
@@ -51,10 +55,10 @@ export interface ConstraintInterface {
  * Built type definition
  */
 export type TypeDef<
-  TContraint extends ConstraintInterface = ConstraintInterface
+  TContraint extends ConstraintInterface = ConstraintInterface,
 > = {
   description?: string;
-  coerce?: (value: any) => any;
+  coerce?: (value: unknown) => UnknownType;
   constraint: TContraint;
 };
 
@@ -63,7 +67,7 @@ export type TypeDef<
  * Partial built type definition
  */
 export type PartrialTypeDef<
-  TContraint extends ConstraintInterface = ConstraintInterface
+  TContraint extends ConstraintInterface = ConstraintInterface,
 > = {
   description?: string;
   coerce?: boolean;
@@ -75,15 +79,15 @@ export type PartrialTypeDef<
  * Return type of the type safe parse method
  */
 export type SafeParseReturnType<T> = {
-  errors: any;
+  errors: UnknownType;
   success: boolean;
   data?: T | null;
 };
 
-/**
- * @internal
- */
-export type RawShapeType = { [k: string]: _AbstractType<any, any, any> };
+/** @internal */
+export type RawShapeType = {
+  [k: string]: _AbstractType<UnknownType, UnknownType, UnknownType>;
+};
 
 /**
  * TypeOf operator allows developper to get the compile time type information
@@ -100,7 +104,7 @@ export type RawShapeType = { [k: string]: _AbstractType<any, any, any> };
  * export type Person = infer<typeof person>;
  * ```
  */
-export type TypeOf<T extends _AbstractType<unknown, any, unknown>> =
+export type TypeOf<T extends _AbstractType<unknown, UnknownType, unknown>> =
   T['_output'];
 
 /**
@@ -140,7 +144,7 @@ export type ParseValueResultType<T = unknown, TError = unknown> = {
 export interface _AbstractType<
   TOutput,
   Def extends TypeDef = TypeDef,
-  TInput = TOutput
+  TInput = TOutput,
 > {
   _type: TOutput;
   _output: TOutput;
@@ -152,7 +156,7 @@ export interface _AbstractType<
    */
   copy(
     def: PartrialTypeDef,
-    _parseFn?: (value: any) => ParseValueResultType<TOutput>
+    _parseFn?: (value: unknown) => ParseValueResultType<TOutput>
   ): _AbstractType<TOutput, Def, TInput>;
 
   /**
@@ -229,7 +233,7 @@ export type _ObjectType<T extends RawShapeType> = _AbstractType<
    *
    * The reverse type of the current object
    */
-  reverseType: _AbstractType<Record<string, any>, any, T>;
+  reverseType: _AbstractType<Record<string, UnknownType>, UnknownType, T>;
 };
 
 /**
@@ -238,7 +242,7 @@ export type _ObjectType<T extends RawShapeType> = _AbstractType<
 export type AbstractType<
   TOutput,
   TDef extends TypeDef = TypeDef,
-  TInput = TOutput
+  TInput = TOutput,
 > = _AbstractType<TOutput, TDef, TInput>;
 
 /**

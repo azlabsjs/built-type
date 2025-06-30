@@ -1,4 +1,4 @@
-import { ConstraintInterface } from './types';
+import { ConstraintInterface, UnknownType } from './types';
 
 /**
  * Base class for constraint that are applicable on built types.
@@ -6,7 +6,7 @@ import { ConstraintInterface } from './types';
 abstract class Constraint implements ConstraintInterface {
   protected _map: Map<
     string,
-    { fn: (value: any) => boolean; message: string }
+    { fn: (value: UnknownType) => boolean; message: string }
   > = new Map();
 
   protected _errors: string[] = [];
@@ -19,7 +19,7 @@ abstract class Constraint implements ConstraintInterface {
     return this._errors;
   }
 
-  abstract expectType: string | ((value: any) => boolean);
+  abstract expectType: string | ((value: UnknownType) => boolean);
 
   nullable() {
     this._null = true;
@@ -36,14 +36,16 @@ abstract class Constraint implements ConstraintInterface {
     return this._errors.length !== 0;
   }
 
-  apply(value: any) {
-    // Reset the errors array to reuse the constraint for a given value
+  apply(value: unknown) {
+    // reset the errors array to reuse the constraint for a given value
     this._errors = [];
-    // Case the value is null and the constraint allow null type
+  
+    // case the value is null and the constraint allow null type
     // return this to wihtout applying any other constraint
     if (this._null === true && value === null) {
       return this;
     }
+
     if (
       this._undefined === true &&
       (value === null || typeof value === 'undefined')
@@ -52,8 +54,9 @@ abstract class Constraint implements ConstraintInterface {
     }
     const assertType =
       typeof this.expectType === 'string'
-        ? (_value: any) => typeof _value === this.expectType
+        ? (v: unknown) => typeof v === this.expectType
         : this.expectType;
+
     if (!assertType(value)) {
       this._errors.push(
         typeof this.expectType === 'string'
@@ -62,6 +65,7 @@ abstract class Constraint implements ConstraintInterface {
       );
       return this;
     }
+
     for (const key of this._map.keys()) {
       const v = this._map.get(key);
       if (typeof v === 'undefined' || v === null) {
@@ -98,7 +102,7 @@ export class StrConstraint extends Constraint {
 
   minLength(len: number, message?: string) {
     this._map.set('min_len', {
-      fn: (value: any) => value.length >= len,
+      fn: (value: unknown) => typeof value === 'string' && value.length >= len,
       message:
         message ??
         `Expect length string length to be greater than or equal to ${len}`,
@@ -108,7 +112,7 @@ export class StrConstraint extends Constraint {
 
   maxLength(len: number, message?: string) {
     this._map.set('max_len', {
-      fn: (value: any) => value.length <= len,
+      fn: (value: unknown) => typeof value === 'string' && value.length <= len,
       message:
         message ??
         `Expect length string length to be less than or equal to ${len}`,
@@ -118,7 +122,7 @@ export class StrConstraint extends Constraint {
 
   pattern(regex: RegExp, message?: string) {
     this._map.set('pattern', {
-      fn: (value: any) => regex.test(value),
+      fn: (value: unknown) => typeof value === 'string' && regex.test(value),
       message:
         message ??
         `Expect the string to match the corresponding pattern ${regex.source}`,
@@ -128,7 +132,8 @@ export class StrConstraint extends Constraint {
 
   startsWith(needle: string, message?: string) {
     this._map.set('starts_with', {
-      fn: (value: any) => value.startsWith(needle),
+      fn: (value: unknown) =>
+        typeof value === 'string' && value.startsWith(needle),
       message: message ?? `Expect string value to starts with ${needle}`,
     });
     return this;
@@ -136,7 +141,8 @@ export class StrConstraint extends Constraint {
 
   endsWith(needle: string, message?: string) {
     this._map.set('ends_with', {
-      fn: (value: any) => value.endsWith(needle),
+      fn: (value: unknown) =>
+        typeof value === 'string' && value.endsWith(needle),
       message: message ?? `Expect string value to ends with ${needle}`,
     });
     return this;
@@ -182,7 +188,7 @@ export class NumberConstraint extends Constraint {
 
   min(min: number, message?: string) {
     this._map.set('min', {
-      fn: (value: any) => value >= min,
+      fn: (value: unknown) => typeof value === 'number' && value >= min,
       message:
         message ?? `Expect the value to be greater than or equal to ${min}`,
     });
@@ -191,7 +197,7 @@ export class NumberConstraint extends Constraint {
 
   max(min: number, message?: string) {
     this._map.set('max', {
-      fn: (value: any) => value <= min,
+      fn: (value: unknown) => typeof value === 'number' && value <= min,
       message: message ?? `Expect the value to be less than or equal to ${min}`,
     });
     return this;
@@ -199,7 +205,8 @@ export class NumberConstraint extends Constraint {
 
   positive(message?: string) {
     this._map.set('positive', {
-      fn: (value: any) => Math.min(0, value) !== 0,
+      fn: (value: unknown) =>
+        typeof value === 'number' && Math.min(0, value) !== 0,
       message: message ?? `Expect the value to be a positive integer`,
     });
     return this;
@@ -207,7 +214,8 @@ export class NumberConstraint extends Constraint {
 
   negative(message?: string) {
     this._map.set('negative', {
-      fn: (value: any) => Math.max(0, value) === 0,
+      fn: (value: unknown) =>
+        typeof value === 'number' && Math.max(0, value) === 0,
       message: message ?? `Expect the value to be a negative integer`,
     });
     return this;
@@ -215,7 +223,7 @@ export class NumberConstraint extends Constraint {
 
   int(message?: string) {
     this._map.set('int', {
-      fn: (value: any) => {
+      fn: (value: unknown) => {
         return Number.isSafeInteger(value);
       },
       message: message ?? `Expect the value to be an integer value`,
@@ -225,7 +233,8 @@ export class NumberConstraint extends Constraint {
 
   float(message?: string) {
     this._map.set('float', {
-      fn: (value: any) => typeof value === 'number' && !Number.isInteger(value),
+      fn: (value: unknown) =>
+        typeof value === 'number' && !Number.isInteger(value),
       message: message ?? `Expect the value to be an integer value`,
     });
     return this;
@@ -233,7 +242,7 @@ export class NumberConstraint extends Constraint {
 
   finite(message?: string) {
     this._map.set('finite', {
-      fn: (value: any) => Number.isFinite(value),
+      fn: (value: unknown) => Number.isFinite(value),
       message: message ?? `Expect the value to be an integer value`,
     });
     return this;
@@ -241,7 +250,8 @@ export class NumberConstraint extends Constraint {
 
   between(min: number, max: number, message?: string) {
     this._map.set('between', {
-      fn: (value: any) => min <= value && max >= value,
+      fn: (value: unknown) =>
+        typeof value === 'number' && min <= value && max >= value,
       message:
         message ??
         `Expect the value be less than or equal to ${max} and greater than or equal to ${min}`,
@@ -277,6 +287,14 @@ export class SymbolConstraint extends Constraint {
   expectType = 'symbol';
 }
 
+function isDateObject(v: unknown): v is Date {
+  return (
+    v instanceof Date ||
+    (typeof v === 'object' &&
+      Object.prototype.toString.call(v) === '[object Date]')
+  );
+}
+
 /**
  * Defines a date constraint class that can be applied to
  * built date types
@@ -291,23 +309,26 @@ export class SymbolConstraint extends Constraint {
  * ```
  */
 export class DateContraint extends Constraint {
-  expectType = (_value: any) =>
-    _value instanceof Date ||
-    (typeof _value === 'object' &&
-      Object.prototype.toString.call(_value) === '[object Date]');
+  expectType = isDateObject;
 
-  private readonly _createDateFunc!: (value: any) => Date;
+  private readonly _createDateFunc!: (value: unknown) => Date;
 
-  constructor(createDateFunc?: (value: any) => Date) {
+  constructor(createDateFunc?: (value: unknown) => Date) {
     super();
     this._createDateFunc =
-      createDateFunc ?? ((_value: string | number | Date) => new Date(_value));
+      createDateFunc ??
+      ((v: unknown) =>
+        typeof v === 'string' || typeof v === 'number'
+          ? new Date(v)
+          : isDateObject(v)
+            ? v
+            : new Date());
   }
 
   // TODO: Add JSDate method after, before, etc... for validation
   min(min: number | Date, message?: string) {
     this._map.set('min_date', {
-      fn: (value: any) =>
+      fn: (value: unknown) =>
         (value instanceof Date
           ? value
           : this._createDateFunc(value)
@@ -325,7 +346,7 @@ export class DateContraint extends Constraint {
 
   max(max: number | Date, message?: string) {
     this._map.set('max_date', {
-      fn: (value: any) =>
+      fn: (value: unknown) =>
         (value instanceof Date
           ? value
           : this._createDateFunc(value)
@@ -362,11 +383,12 @@ export class DateContraint extends Constraint {
  * ```
  */
 export class ArrayConstraint extends Constraint {
-  expectType = (_value: any) => Array.isArray(_value);
+  expectType = (v: unknown) => Array.isArray(v);
 
   min(len: number, message?: string) {
     this._map.set('min', {
-      fn: (value: any) => (value ?? []).length >= len,
+      fn: (value: unknown) =>
+        Array.isArray(value) && (value ?? []).length >= len,
       message:
         message ??
         `Expects the array length to contains at least ${len} element`,
@@ -376,7 +398,8 @@ export class ArrayConstraint extends Constraint {
 
   max(len: number, message?: string) {
     this._map.set('max', {
-      fn: (value: any) => (value ?? []).length <= len,
+      fn: (value: unknown) =>
+        Array.isArray(value) && (value ?? []).length <= len,
       message:
         message ??
         `Expects the array length to contains at most ${len} element`,
@@ -386,7 +409,7 @@ export class ArrayConstraint extends Constraint {
 
   length(len: number, message?: string) {
     this._map.set('length', {
-      fn: (value: any) => value.length === len,
+      fn: (value: unknown) => Array.isArray(value) && value.length === len,
       message: message ?? `Expects the array length to equal ${len}`,
     });
     return this;
@@ -394,7 +417,8 @@ export class ArrayConstraint extends Constraint {
 
   nonempty(message?: string) {
     this._map.set('nonempty', {
-      fn: (value: any) => (value ?? []).length !== 0,
+      fn: (value: unknown) =>
+        Array.isArray(value) && (value ?? []).length !== 0,
       message: message ?? `Expects the array to not be empty`,
     });
     return this;
@@ -406,7 +430,7 @@ export class ArrayConstraint extends Constraint {
  * built object types
  */
 export class ObjectConstraint extends Constraint {
-  expectType = (value: any) => {
+  expectType = (value: unknown) => {
     if (typeof value !== 'object') {
       return false;
     }
@@ -417,7 +441,7 @@ export class ObjectConstraint extends Constraint {
     const _keys = typeof keys === 'string' ? [keys] : keys;
     const missingKeys: string[] = [];
     this._map.set('required', {
-      fn: (value: any) => {
+      fn: (value: unknown) => {
         for (const key of _keys) {
           if (!(key in (value as object))) {
             missingKeys.push(key);
@@ -456,7 +480,7 @@ export class NoConstraint extends Constraint {
  * ```
  */
 export class NullishConstraint extends Constraint {
-  expectType = (_value: any) =>
+  expectType = (_value: unknown) =>
     typeof _value === 'undefined' || _value === null;
 }
 
@@ -475,7 +499,7 @@ export class NullishConstraint extends Constraint {
  * ```
  */
 export class NullConstraint extends Constraint {
-  expectType = (value: any) => value === null;
+  expectType = (value: unknown) => value === null;
 }
 
 /**
@@ -483,12 +507,17 @@ export class NullConstraint extends Constraint {
  * built map types
  */
 export class MapConstraint extends Constraint {
-  expectType = (value: any) => {
+  expectType = (value: unknown) => {
     if (value instanceof Map) {
       return true;
     }
+
+    function isObject(v: unknown): v is Record<string, unknown> {
+      return typeof v === 'object';
+    }
+
     if (
-      value &&
+      isObject(value) &&
       typeof value.clear === 'function' &&
       typeof value.delete === 'function' &&
       typeof value.get === 'function' &&
@@ -497,6 +526,7 @@ export class MapConstraint extends Constraint {
     ) {
       return true;
     }
+
     return false;
   };
 }
@@ -521,12 +551,15 @@ export class MapConstraint extends Constraint {
  * ```
  */
 export class SetConstraint extends Constraint {
-  expectType = (value: any) => {
+  expectType = (value: unknown) => {
     if (value instanceof Set) {
       return true;
     }
+    function isObject(v: unknown): v is Record<string, unknown> {
+      return typeof v === 'object';
+    }
     if (
-      value &&
+      isObject(value) &&
       typeof value.add === 'function' &&
       typeof value.clear === 'function' &&
       typeof value.delete === 'function' &&
@@ -534,12 +567,13 @@ export class SetConstraint extends Constraint {
     ) {
       return true;
     }
+
     return false;
   };
 
   min(len: number, message?: string) {
     this._map.set('min', {
-      fn: (value: any) => (value as Set<unknown>)?.size >= len,
+      fn: (value: unknown) => (value as Set<unknown>)?.size >= len,
       message: message ?? `Expects set to be greater ${len}`,
     });
     return this;
@@ -547,7 +581,7 @@ export class SetConstraint extends Constraint {
 
   max(len: number, message?: string) {
     this._map.set('max', {
-      fn: (value: any) => (value as Set<unknown>)?.size <= len,
+      fn: (value: unknown) => (value as Set<unknown>)?.size <= len,
       message: message ?? `Expects set size be less than ${len}`,
     });
     return this;
@@ -555,7 +589,7 @@ export class SetConstraint extends Constraint {
 
   nonempty(message?: string) {
     this._map.set('nonempty', {
-      fn: (value: any) => (value as Set<unknown>)?.size !== 0,
+      fn: (value: unknown) => (value as Set<unknown>)?.size !== 0,
       message: message ?? `Expects set to not be empty`,
     });
     return this;

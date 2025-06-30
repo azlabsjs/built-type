@@ -6,6 +6,7 @@ import {
   RawShapeType,
   SafeParseReturnType,
   TypeDef,
+  UnknownType,
   _AbstractType,
 } from './types';
 
@@ -23,7 +24,7 @@ export function createPropMapFunc<T extends RawShapeType>(
       [];
     for (const key in shape) {
       _propMap.push({
-        inputKey: propertyMap ? propertyMap[key] ?? key : key,
+        inputKey: propertyMap ? (propertyMap[key] ?? key) : key,
         _type: shape[key],
         outputKey: key,
       });
@@ -40,7 +41,7 @@ export function createPropMapFunc<T extends RawShapeType>(
 export function mergeTypeDefRequiredParams<T>(
   c: ConstraintInterface,
   def?: PartrialTypeDef,
-  coerceFunc?: (value: any) => T
+  coerceFunc?: (value: unknown) => T
 ) {
   const { constraint, coerce, description } =
     typeof def !== 'undefined' && def !== null && 'constraint' in def
@@ -108,10 +109,10 @@ export function safeParse<T extends TypeAny>(
  * from breaking because the same object is returned.
  */
 export function safeParseReverse<
-  T extends _AbstractType<{ [k: string]: unknown }>
+  T extends _AbstractType<{ [k: string]: unknown }>,
 >(
   value: T['_output'],
-  _type: T & { reverseType: _AbstractType<any> }
+  _type: T & { reverseType: _AbstractType<UnknownType> }
 ): SafeParseReturnType<T['_input']> {
   return _type.reverseType
     ? _type.reverseType.safeParse(value)
